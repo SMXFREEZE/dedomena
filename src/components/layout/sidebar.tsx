@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GlassCard } from "@/components/ui/glass-card";
 import { useAppStore } from "@/store";
 import { Database, Plus, Settings, Blocks, Sparkles, Network } from "lucide-react";
 import { cn, fmtChars } from "@/lib/utils";
@@ -18,7 +17,6 @@ export function Sidebar({
   setActiveTab: (v: string) => void;
 }) {
   const sources = useAppStore(s => s.sources);
-  const totalChars = sources.reduce((a, s) => a + (s.charCount || 0), 0);
 
   const navItems = [
     { id: "intelligence", icon: Sparkles, label: "Intelligence", desc: "Search & synthesis" },
@@ -31,15 +29,15 @@ export function Sidebar({
       {/* Brand */}
       <div className="p-6 flex items-center justify-between">
         <div>
-          <div className="flex items-baseline gap-2.5">
-            <span className="brand-sigma text-[2.1rem] text-white/35 leading-none select-none">
-              Σ
-            </span>
-            <h1 className="text-xl font-semibold tracking-[0.12em] text-white/90 uppercase leading-none">
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-[1.35rem] font-semibold tracking-wide text-white/90 leading-none">
               dedomena
             </h1>
+            <span className="text-[1.4rem] font-normal text-coral-500 leading-none select-none">
+              Σ
+            </span>
           </div>
-          <p className="brand-tagline text-[9px] tracking-[0.22em] text-white/25 font-normal mt-2 pl-0.5">
+          <p className="brand-tagline text-[9px] tracking-[0.22em] text-white/25 font-normal mt-2">
             δεδομένα · given things
           </p>
         </div>
