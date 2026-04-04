@@ -31,11 +31,13 @@ export function Sidebar({
       {/* Brand */}
       <div className="p-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tighter">
-            <span className="text-gradient">dedo</span>
-            <span className="text-foreground">mena</span>
-          </h1>
-          <p className="text-[10px] uppercase tracking-widest text-white/30 font-semibold mt-1">
+          <div className="flex items-end gap-1.5">
+            <h1 className="text-2xl font-bold tracking-tight text-white leading-none">
+              Dedomena
+            </h1>
+            <span className="text-coral-500 font-bold text-2xl leading-none">Σ</span>
+          </div>
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-semibold mt-2">
             Engineered Data
           </p>
         </div>
