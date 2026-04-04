@@ -61,6 +61,27 @@ function getPath(obj: any, path: string) {
   return path.split(".").reduce((a, k) => a?.[k], obj);
 }
 
+// ── Gmail helpers ─────────────────────────────────────────────────────────────
+function decodeBase64Url(str: string): string {
+  const b64 = str.replace(/-/g, "+").replace(/_/g, "/");
+  try { return atob(b64); } catch { return ""; }
+}
+
+function extractEmailBody(payload: any): string {
+  if (!payload) return "";
+  if (payload.body?.data) return decodeBase64Url(payload.body.data);
+  if (payload.parts) {
+    for (const part of payload.parts) {
+      if (part.mimeType === "text/plain" && part.body?.data) return decodeBase64Url(part.body.data);
+    }
+    for (const part of payload.parts) {
+      const body = extractEmailBody(part);
+      if (body) return body;
+    }
+  }
+  return "";
+}
+
 // ── Data fetchers ─────────────────────────────────────────────────────────────
 export async function fetchRest(cfg: any) {
   const { url, authType, authValue, authHeader, jsonPath } = cfg;
@@ -79,28 +100,66 @@ export async function fetchRest(cfg: any) {
   return res.text();
 }
 
+// Fetches ALL pages from a Notion database or page using cursor pagination
 export async function fetchNotion(cfg: any) {
   const { integrationToken, resourceType, resourceId } = cfg;
   const h = { "Authorization": `Bearer ${integrationToken}`, "Notion-Version": "2022-06-28", "Content-Type": "application/json" };
+
   if (resourceType === "database") {
-    const res = await fetch(`https://api.notion.com/v1/databases/${resourceId}/query`, { method: "POST", headers: h, body: JSON.stringify({ page_size: 100 }) });
-    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(`Notion: ${e.message || res.status}`); }
-    const d = await res.json();
-    return d.results.map((p: any, i: number) => `--- Page ${i + 1} ---\n${notionPropsToText(p.properties)}`).join("\n\n");
+    const results: any[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const body: any = { page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+      const res = await fetch(`https://api.notion.com/v1/databases/${resourceId}/query`, { method: "POST", headers: h, body: JSON.stringify(body) });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(`Notion: ${e.message || res.status}`); }
+      const d = await res.json();
+      results.push(...d.results);
+      cursor = d.has_more ? d.next_cursor : undefined;
+    } while (cursor);
+
+    return results.map((p: any, i: number) => `--- Page ${i + 1} ---\n${notionPropsToText(p.properties)}`).join("\n\n");
+
   } else {
-    const res = await fetch(`https://api.notion.com/v1/blocks/${resourceId}/children?page_size=100`, { headers: h });
-    if (!res.ok) throw new Error(`Notion: ${res.status}`);
-    const d = await res.json();
-    return d.results.map((b: any) => { const c = b[b.type]; return c?.rich_text?.map((r: any) => r.plain_text).join("") || ""; }).filter(Boolean).join("\n");
+    const blocks: string[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const params = new URLSearchParams({ page_size: "100" });
+      if (cursor) params.set("start_cursor", cursor);
+      const res = await fetch(`https://api.notion.com/v1/blocks/${resourceId}/children?${params}`, { headers: h });
+      if (!res.ok) throw new Error(`Notion: ${res.status}`);
+      const d = await res.json();
+      for (const b of d.results) {
+        const c = b[b.type];
+        const text = c?.rich_text?.map((r: any) => r.plain_text).join("") || "";
+        if (text) blocks.push(text);
+      }
+      cursor = d.has_more ? d.next_cursor : undefined;
+    } while (cursor);
+
+    return blocks.join("\n");
   }
 }
 
+// Fetches ALL records from Airtable using offset pagination
 export async function fetchAirtable(cfg: any) {
   const { accessToken, baseId, tableName } = cfg;
-  const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}?maxRecords=100`, { headers: { "Authorization": `Bearer ${accessToken}` } });
-  if (!res.ok) throw new Error(`Airtable: ${res.status}`);
-  const d = await res.json();
-  return (d.records || []).map((r: any, i: number) => `--- Record ${i + 1} ---\n${Object.entries(r.fields).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join("\n")}`).join("\n\n");
+  const records: any[] = [];
+  let offset: string | undefined;
+
+  do {
+    const params = new URLSearchParams({ pageSize: "100" });
+    if (offset) params.set("offset", offset);
+    const res = await fetch(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}?${params}`, { headers: { "Authorization": `Bearer ${accessToken}` } });
+    if (!res.ok) throw new Error(`Airtable: ${res.status}`);
+    const d = await res.json();
+    records.push(...(d.records || []));
+    offset = d.offset;
+  } while (offset);
+
+  return records.map((r: any, i: number) => `--- Record ${i + 1} ---\n${Object.entries(r.fields).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join("\n")}`).join("\n\n");
 }
 
 export async function fetchAwsS3(cfg: any) {
@@ -110,16 +169,27 @@ export async function fetchAwsS3(cfg: any) {
   return res.text();
 }
 
+// Fetches ALL items from DynamoDB using LastEvaluatedKey pagination
 export async function fetchAwsDynamo(cfg: any) {
-  const { accessKeyId, secretAccessKey, region, tableName, limit = 50 } = cfg;
-  const body = JSON.stringify({ TableName: tableName, Limit: parseInt(limit) || 50 });
-  const res = await signedAwsFetch(`https://dynamodb.${region}.amazonaws.com/`, {
-    accessKeyId, secretAccessKey, region, service: "dynamodb", method: "POST", body,
-    extra: { "content-type": "application/x-amz-json-1.0", "x-amz-target": "DynamoDB_20120810.Scan" }
-  });
-  if (!res.ok) throw new Error(`DynamoDB: ${res.status}`);
-  const d = await res.json();
-  return (d.Items || []).map((item: any, i: number) => `--- Item ${i + 1} ---\n${Object.entries(item).map(([k, v]: any) => `${k}: ${v.S || v.N || (v.BOOL != null ? v.BOOL : JSON.stringify(v))}`).join("\n")}`).join("\n\n");
+  const { accessKeyId, secretAccessKey, region, tableName } = cfg;
+  const items: any[] = [];
+  let lastKey: any;
+
+  do {
+    const scanBody: any = { TableName: tableName };
+    if (lastKey) scanBody.ExclusiveStartKey = lastKey;
+    const body = JSON.stringify(scanBody);
+    const res = await signedAwsFetch(`https://dynamodb.${region}.amazonaws.com/`, {
+      accessKeyId, secretAccessKey, region, service: "dynamodb", method: "POST", body,
+      extra: { "content-type": "application/x-amz-json-1.0", "x-amz-target": "DynamoDB_20120810.Scan" }
+    });
+    if (!res.ok) throw new Error(`DynamoDB: ${res.status}`);
+    const d = await res.json();
+    items.push(...(d.Items || []));
+    lastKey = d.LastEvaluatedKey;
+  } while (lastKey);
+
+  return items.map((item: any, i: number) => `--- Item ${i + 1} ---\n${Object.entries(item).map(([k, v]: any) => `${k}: ${v.S || v.N || (v.BOOL != null ? v.BOOL : JSON.stringify(v))}`).join("\n")}`).join("\n\n");
 }
 
 export async function fetchAzureCosmos(cfg: any) {
@@ -141,11 +211,69 @@ export async function fetchAzureBlob(cfg: any) {
   return res.text();
 }
 
-// ── AI search ─────────────────────────────────────────────────────────────────
+// Fetches ALL Gmail emails using OAuth token — paginates through entire inbox
+export async function fetchGmail(accessToken: string): Promise<string> {
+  const h = { Authorization: `Bearer ${accessToken}` };
+  const base = "https://gmail.googleapis.com/gmail/v1/users/me";
+
+  // Step 1: Collect all message IDs across all pages
+  const ids: string[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const params = new URLSearchParams({ maxResults: "500" });
+    if (pageToken) params.set("pageToken", pageToken);
+    const res = await fetch(`${base}/messages?${params}`, { headers: h });
+    if (!res.ok) throw new Error(`Gmail list failed: ${res.status}`);
+    const d = await res.json();
+    for (const m of d.messages || []) ids.push(m.id);
+    pageToken = d.nextPageToken;
+  } while (pageToken);
+
+  if (ids.length === 0) return "No emails found in this inbox.";
+
+  // Step 2: Fetch full message details in parallel batches
+  // Uses format=full to get the actual body text, not just snippets
+  const emails: string[] = [];
+  const BATCH = 10;
+
+  for (let i = 0; i < ids.length; i += BATCH) {
+    const batch = ids.slice(i, i + BATCH);
+    const results = await Promise.all(
+      batch.map(id =>
+        fetch(`${base}/messages/${id}?format=full`, { headers: h })
+          .then(r => r.json())
+          .catch(() => null)
+      )
+    );
+
+    for (const msg of results) {
+      if (!msg?.payload) continue;
+      const msgHeaders = Object.fromEntries(
+        (msg.payload.headers || []).map((hdr: any) => [hdr.name, hdr.value])
+      );
+      // Cap per-email body at 3000 chars to balance depth vs. total size
+      const body = extractEmailBody(msg.payload).slice(0, 3000).trim();
+      emails.push([
+        `From: ${msgHeaders.From || ""}`,
+        `To: ${msgHeaders.To || ""}`,
+        `Date: ${msgHeaders.Date || ""}`,
+        `Subject: ${msgHeaders.Subject || ""}`,
+        body ? `Body:\n${body}` : `Preview: ${msg.snippet || ""}`,
+      ].join("\n"));
+    }
+  }
+
+  return emails.join("\n\n---\n\n");
+}
+
+// ── AI search (client-side direct call) ───────────────────────────────────────
 export async function aiSearch(query: string, sources: any[], getStorageContent: (id: string) => string, settings: any) {
-  const { provider, apiKey, model } = settings;
+  const { provider, apiKey, model, systemPrompt } = settings;
   if (!apiKey) throw new Error("No API key set. Open settings gear icon.");
-  const MAX = 60000;
+
+  // ~150k tokens — well within Claude's 200k context window
+  const MAX = 600000;
   let ctx = "";
   for (const src of sources) {
     const content = getStorageContent(src.id);
@@ -156,15 +284,23 @@ export async function aiSearch(query: string, sources: any[], getStorageContent:
   }
   if (!ctx.trim()) throw new Error("No source content available. Add data sources first.");
 
-  const sys = `You are an enterprise document intelligence and data aggregation engine. Analyze the provided sources and return ONLY valid JSON (no markdown, no code fences) with this exact structure:
-{"summary":"2-3 sentence precise analytical summary","found":true,"hits":[{"sourceName":"exact name","excerpt":"relevant quote \u2264400 chars","relevance":"why relevant"}]}
-If nothing found: {"summary":"No relevant content found across integrated assets.","found":false,"hits":[]}`;
+  const userInstructions = systemPrompt?.trim() ? `${systemPrompt.trim()}\n\n` : "";
+
+  const sys = `${userInstructions}CRITICAL RULES — follow without exception:
+1. Answer ONLY from the ASSETS provided below. Never use prior knowledge, training data, or make assumptions.
+2. If the answer cannot be found in the assets, set found=false and explain that the data does not contain the relevant information.
+3. Never guess, infer, or extrapolate beyond what is explicitly stated in the provided data.
+4. Always cite the exact source name and a direct excerpt for every claim.
+
+Return ONLY valid JSON (no markdown, no code fences):
+{"summary":"precise answer grounded only in the provided data","found":true,"hits":[{"sourceName":"exact source name","excerpt":"relevant quote ≤400 chars","relevance":"why this excerpt answers the query"}]}
+If not found in the data: {"summary":"The imported data does not contain information relevant to this query. I cannot answer without the relevant data being present in the connected assets.","found":false,"hits":[]}`;
 
   if (provider === "anthropic") {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
-      body: JSON.stringify({ model: model || "claude-3-5-sonnet-20240620", max_tokens: 2048, system: sys, messages: [{ role: "user", content: `ASSETS:\n${ctx}\n\n---\nQUERY: ${query}` }] })
+      body: JSON.stringify({ model: model || "claude-sonnet-4-6", max_tokens: 4096, system: sys, messages: [{ role: "user", content: `ASSETS:\n${ctx}\n\n---\nQUERY: ${query}` }] })
     });
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `Anthropic ${res.status}`); }
     const d = await res.json();
@@ -173,7 +309,7 @@ If nothing found: {"summary":"No relevant content found across integrated assets
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: model || "gpt-4o", messages: [{ role: "system", content: sys }, { role: "user", content: `ASSETS:\n${ctx}\n\n---\nQUERY: ${query}` }], max_tokens: 2048, response_format: { type: "json_object" } })
+      body: JSON.stringify({ model: model || "gpt-4o", messages: [{ role: "system", content: sys }, { role: "user", content: `ASSETS:\n${ctx}\n\n---\nQUERY: ${query}` }], max_tokens: 4096, response_format: { type: "json_object" } })
     });
     if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `OpenAI ${res.status}`); }
     const d = await res.json();

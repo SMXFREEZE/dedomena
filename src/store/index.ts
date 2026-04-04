@@ -18,6 +18,7 @@ export interface AppSettings {
   provider: "anthropic" | "openai";
   apiKey: string;
   model: string;
+  systemPrompt: string;
 }
 
 interface AppState {
@@ -36,6 +37,7 @@ export const useAppStore = create<AppState>()(
         provider: "anthropic",
         apiKey: "",
         model: "claude-sonnet-4-6",
+        systemPrompt: "",
       },
       addSourceMeta: (meta) => set((state) => ({
         sources: [
@@ -74,7 +76,7 @@ export const ContentStorage = {
   save: (id: string, content: string) => {
     try {
       const all = JSON.parse(localStorage.getItem("dedomena_content_v2") || "{}");
-      all[id] = (content || "").slice(0, 500000);
+      all[id] = (content || "").slice(0, 2000000);
       localStorage.setItem("dedomena_content_v2", JSON.stringify(all));
     } catch (e) {
       console.error("Storage full", e);

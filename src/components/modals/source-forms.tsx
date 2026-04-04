@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAppStore, ContentStorage } from "@/store";
-import { fetchRest, fetchNotion, fetchAirtable, fetchAwsS3, fetchAwsDynamo, fetchAzureCosmos, fetchAzureBlob } from "@/lib/api";
+import { fetchRest, fetchAwsS3, fetchAwsDynamo } from "@/lib/api";
 import { toast } from "sonner";
 import { ExternalLink, RefreshCw } from "lucide-react";
 
@@ -79,7 +78,7 @@ export function RestForm({ onAdd, onBack }: any) {
       
       <div className="space-y-1.5 flex flex-col">
         <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Authentication Type</label>
-        <select value={f.authType} onChange={e => setF({...f, authType: e.target.value})} className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm focus:ring-1 focus:ring-quartz-500">
+        <select aria-label="Authentication Type" value={f.authType} onChange={e => setF({...f, authType: e.target.value})} className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm focus:ring-1 focus:ring-quartz-500">
           <option value="none">None</option><option value="bearer">Bearer Token</option>
           <option value="apikey">API Key Header</option><option value="basic">Basic (user:pass)</option>
         </select>
@@ -99,11 +98,9 @@ export function RestForm({ onAdd, onBack }: any) {
 }
 
 // ── Gmail ──────────────────────────────────────────────────────────
-export function GmailForm({ onAdd, onBack }: any) {
+export function GmailForm({ onBack }: any) {
   const [clientId, setClientId] = useState("");
   const [name, setName] = useState("Gmail");
-  const [max, setMax] = useState("50");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setClientId(sessionStorage.getItem('gmail_oauth_client') || "");
@@ -114,7 +111,6 @@ export function GmailForm({ onAdd, onBack }: any) {
     const redirect = window.location.href.split('#')[0].split('?')[0];
     sessionStorage.setItem('gmail_oauth_client', clientId);
     sessionStorage.setItem('gmail_oauth_name', name);
-    sessionStorage.setItem('gmail_oauth_max', max);
     const scope = 'https://www.googleapis.com/auth/gmail.readonly';
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirect)}&response_type=token&scope=${encodeURIComponent(scope)}&prompt=consent`;
   };
@@ -122,14 +118,14 @@ export function GmailForm({ onAdd, onBack }: any) {
   return (
     <div className="space-y-4">
       <div className="text-white/60 text-xs bg-red-500/10 p-4 rounded-xl border border-red-500/20">
-        Requires Google Cloud OAuth config with this page's URL as authorized redirect.
+        Requires Google Cloud OAuth config with this page&apos;s URL as an authorized redirect URI.
+        All emails in the inbox will be fetched — large inboxes may take a few minutes.
       </div>
       <Input label="Source Name" value={name} onChange={e => setName(e.target.value)} />
       <Input label="Google OAuth Client ID *" value={clientId} onChange={e => setClientId(e.target.value)} placeholder="xxxxxxxx.apps.googleusercontent.com" />
-      <Input label="Max Emails to Fetch" type="number" value={max} onChange={e => setMax(e.target.value)} />
       <div className="flex gap-3 justify-end pt-4">
         <Button variant="ghost" onClick={onBack}>Back</Button>
-        <Button onClick={startOAuth} disabled={!clientId || loading}>Authenticate <ExternalLink size={14} className="ml-1"/></Button>
+        <Button onClick={startOAuth} disabled={!clientId}>Authenticate <ExternalLink size={14} className="ml-1"/></Button>
       </div>
     </div>
   );
@@ -157,7 +153,7 @@ export function AwsForm({ onAdd, onBack }: any) {
       <Input label="Source Name" value={f.name} onChange={e => setF({...f, name: e.target.value})} placeholder="AWS Data" />
       <div className="space-y-1.5 flex flex-col">
         <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Service</label>
-        <select value={f.service} onChange={e => setF({...f, service: e.target.value})} className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm focus:ring-1 focus:ring-[#ff9900]">
+        <select aria-label="AWS Service" value={f.service} onChange={e => setF({...f, service: e.target.value})} className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm focus:ring-1 focus:ring-[#ff9900]">
           <option value="s3">S3 Document (Read)</option><option value="dynamodb">DynamoDB (Scan)</option>
         </select>
       </div>

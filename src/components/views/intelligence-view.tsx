@@ -22,6 +22,7 @@ export function IntelligenceView() {
   const [result, setResult] = useState<any>(null);
   
   const sources = useAppStore(s => s.sources);
+  const settings = useAppStore(s => s.settings);
 
   const executeSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
@@ -42,7 +43,7 @@ export function IntelligenceView() {
       const res = await fetch("/api/synthesize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: searchQuery, sourcesData })
+        body: JSON.stringify({ query: searchQuery, sourcesData, systemPrompt: settings.systemPrompt })
       });
 
       const data = await res.json();

@@ -31,14 +31,16 @@ export function Sidebar({
       {/* Brand */}
       <div className="p-6 flex items-center justify-between">
         <div>
-          <div className="flex items-end gap-1.5">
-            <h1 className="text-2xl font-bold tracking-tight text-white leading-none">
-              Dedomena
+          <div className="flex items-baseline gap-2.5">
+            <span className="brand-sigma text-[2.1rem] text-white/35 leading-none select-none">
+              Σ
+            </span>
+            <h1 className="text-xl font-semibold tracking-[0.12em] text-white/90 uppercase leading-none">
+              dedomena
             </h1>
-            <span className="text-coral-500 font-bold text-2xl leading-none">Σ</span>
           </div>
-          <p className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-semibold mt-2">
-            Engineered Data
+          <p className="brand-tagline text-[9px] tracking-[0.22em] text-white/25 font-normal mt-2 pl-0.5">
+            δεδομένα · given things
           </p>
         </div>
         <button 

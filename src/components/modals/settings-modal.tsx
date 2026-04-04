@@ -1,11 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { X, ShieldCheck } from "lucide-react";
+import { X, ShieldCheck, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppStore } from "@/store";
+import { toast } from "sonner";
 
 export function SettingsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { settings, updateSettings } = useAppStore();
+  const [prompt, setPrompt] = useState(settings.systemPrompt);
+
   if (!isOpen) return null;
+
+  const save = () => {
+    updateSettings({ systemPrompt: prompt });
+    toast.success("Settings saved");
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 bg-[#030304]/80 backdrop-blur-xl z-50 flex items-center justify-center p-4">
@@ -13,35 +25,48 @@ export function SettingsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        className="bg-[#0b0b0e] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative"
+        className="bg-[#0b0b0e] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative"
       >
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-quartz-500/30 to-transparent" />
-        
+
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold tracking-tight">System Configuration</h2>
-            <p className="text-sm text-white/40">Security and platform settings.</p>
+            <p className="text-sm text-white/40">Configure AI behavior and data grounding.</p>
           </div>
-          <button onClick={onClose} className="p-2 text-white/40 hover:text-white transition-colors bg-white/5 rounded-full">
+          <button type="button" aria-label="Close settings" onClick={onClose} className="p-2 text-white/40 hover:text-white transition-colors bg-white/5 rounded-full">
             <X size={16} />
           </button>
         </div>
 
-        <div className="p-8 space-y-6 text-center flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 mb-2">
-            <ShieldCheck size={32} className="text-emerald-500" />
-          </div>
-          
-          <div>
-            <h3 className="text-white/90 font-medium mb-2">Enterprise Security Enabled</h3>
-            <p className="text-sm text-white/50 leading-relaxed">
-              API Keys and core model configurations are managed securely on the backend environment. 
-              Users do not need to provide their own authentication keys.
+        <div className="p-6 space-y-6">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+            <ShieldCheck size={16} className="text-emerald-500 shrink-0" />
+            <p className="text-xs text-white/50">
+              API keys are managed securely on the backend. The AI will <strong className="text-white/70">never answer</strong> without imported data — no guessing, no prior knowledge.
             </p>
           </div>
 
-          <div className="pt-4 w-full">
-            <Button className="w-full" onClick={onClose}>Understood</Button>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Terminal size={14} className="text-quartz-500" />
+              <label className="text-xs font-medium text-white/50 uppercase tracking-wider">AI System Prompt</label>
+            </div>
+            <textarea
+              value={prompt}
+              onChange={e => setPrompt(e.target.value)}
+              placeholder={`Optional persona or focus instructions. Example:\n"You are analyzing my company's sales data. Focus on revenue trends and customer patterns. Always cite the specific source for each insight."\n\nLeave empty for default strict data-grounding mode.`}
+              rows={7}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-quartz-500 resize-none leading-relaxed"
+            />
+            <p className="text-xs text-white/30 leading-relaxed">
+              This controls how the AI interprets your data. It will always be grounded strictly to your imported assets — it cannot answer without data, and will never guess.
+            </p>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button onClick={save}>Save Settings</Button>
           </div>
         </div>
       </motion.div>

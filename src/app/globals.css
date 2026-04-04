@@ -60,3 +60,15 @@ body {
     background-clip: text;
   }
 }
+
+/* Brand logo — Greek/philosophical Sigma */
+.brand-sigma {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.brand-tagline {
+  font-family: Georgia, serif;
+  font-style: italic;
+}
