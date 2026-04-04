@@ -33,13 +33,10 @@ export function Sidebar({
             <h1 className="text-[1.35rem] font-semibold tracking-wide text-white/90 leading-none">
               dedomena
             </h1>
-            <span className="text-[1.4rem] font-normal text-coral-500 leading-none select-none">
+            <span className="brand-sigma text-[2rem] text-white/35 leading-none select-none">
               Σ
             </span>
           </div>
-          <p className="brand-tagline text-[9px] tracking-[0.22em] text-white/25 font-normal mt-2">
-            δεδομένα · given things
-          </p>
         </div>
         <button 
           onClick={onOpenSettings}
