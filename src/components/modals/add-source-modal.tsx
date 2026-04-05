@@ -15,10 +15,10 @@ export function AddSourceModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
   if (!isOpen) return null;
 
-  const handleAdd = ({ name, type, content }: { name: string; type: string; content: string }) => {
+  const handleAdd = ({ name, type, content, contentType }: { name: string; type: string; content: string; contentType?: any }) => {
     const id = Math.random().toString(36).slice(2, 11);
     ContentStorage.save(id, content);
-    addSourceMeta({ id, name: name || 'Unnamed Source', type: type as any, charCount: content?.length ?? 0 });
+    addSourceMeta({ id, name: name || 'Unnamed Source', type, contentType, charCount: content?.length ?? 0 });
     toast.success(`Connected: ${name}`);
     setSelected(null);
     onClose();

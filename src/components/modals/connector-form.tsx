@@ -11,10 +11,11 @@ import { runClientFetcher } from "@/lib/connectors/fetchers";
 import { ContentStorage } from "@/store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ContentType } from "@/store";
 
 interface ConnectorFormProps {
   connector: Connector;
-  onAdd: (result: { name: string; type: string; content: string }) => void;
+  onAdd: (result: { name: string; type: string; content: string; contentType?: ContentType }) => void;
   onBack: () => void;
 }
 
@@ -188,42 +189,143 @@ function FieldRenderer({ field, value, onChange }: { field: ConnectorField; valu
   );
 }
 
-// ── Local file form ────────────────────────────────────────────────────────────
+// ── Local file form — accepts any file type ────────────────────────────────────
+const FILE_TYPES: { ext: string[]; mime: string[]; label: string }[] = [
+  { ext: ['.txt','.md','.html','.xml','.yaml','.yml','.log','.rtf'], mime: ['text/*'], label: 'Text' },
+  { ext: ['.csv'], mime: ['text/csv'], label: 'CSV' },
+  { ext: ['.json','.jsonl','.ndjson'], mime: ['application/json'], label: 'JSON' },
+  { ext: ['.pdf'], mime: ['application/pdf'], label: 'PDF' },
+  { ext: ['.jpg','.jpeg','.png','.gif','.webp','.bmp','.tiff'], mime: ['image/*'], label: 'Image' },
+  { ext: ['.xlsx','.xls','.xlsm'], mime: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'], label: 'Excel' },
+  { ext: ['.docx','.doc'], mime: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'], label: 'Word' },
+  { ext: ['.pptx','.ppt'], mime: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'], label: 'PowerPoint' },
+];
+
+function detectContentType(file: File): 'text' | 'image' | 'pdf' | 'spreadsheet' {
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) return 'pdf';
+  if (file.name.match(/\.(xlsx|xls|xlsm|csv)$/i)) return 'spreadsheet';
+  return 'text';
+}
+
+async function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string); // data:mime;base64,xxx
+    reader.onerror = () => reject(new Error('File read failed'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function extractFileContent(file: File): Promise<{ content: string; contentType: 'text' | 'image' | 'pdf' | 'spreadsheet' }> {
+  const ct = detectContentType(file);
+
+  if (ct === 'image' || ct === 'pdf') {
+    // Store as base64 data URL — Claude handles these natively
+    const dataUrl = await readFileAsBase64(file);
+    return { content: dataUrl, contentType: ct };
+  }
+
+  if (ct === 'spreadsheet' && file.name.match(/\.(xlsx|xls|xlsm)$/i)) {
+    // Parse Excel to CSV text using SheetJS
+    try {
+      const XLSX = await import('xlsx');
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      const sheets = wb.SheetNames.map(sn => {
+        const csv = XLSX.utils.sheet_to_csv(wb.Sheets[sn]);
+        return `=== Sheet: ${sn} ===\n${csv}`;
+      });
+      return { content: sheets.join('\n\n'), contentType: 'spreadsheet' };
+    } catch {
+      // Fallback: read as text
+      return { content: await file.text(), contentType: 'text' };
+    }
+  }
+
+  // Everything else: read as plain text
+  return { content: await file.text(), contentType: 'text' };
+}
+
 function LocalFileForm({ name, setName, onAdd, onBack }: any) {
   const [loading, setLoading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
-  const pick = async () => {
-    if (!(window as any).showOpenFilePicker) {
-      return toast.error('Your browser does not support the File System Access API');
-    }
+  const processFile = async (file: File) => {
+    setLoading(true);
     try {
-      const [handle] = await (window as any).showOpenFilePicker({
-        types: [{ description: 'Text files', accept: { 'text/*': ['.txt', '.csv', '.json', '.md', '.html', '.xml', '.yaml', '.yml'] } }],
-      });
-      setLoading(true);
-      const file = await handle.getFile();
-      const content = await file.text();
-      onAdd({ name: name || file.name, type: 'local-file', content });
-      toast.success(`Linked: ${file.name}`);
+      const { content, contentType } = await extractFileContent(file);
+      onAdd({ name: name || file.name, type: 'local-file', content, contentType });
+      toast.success(`Imported: ${file.name}`);
     } catch (e: any) {
-      if (e.name !== 'AbortError') toast.error(e.message);
+      toast.error(e.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const pick = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '*/*';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) await processFile(file);
+    };
+    input.click();
+  };
+
+  const onDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) await processFile(file);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="text-white/50 text-xs bg-quartz-500/10 p-4 rounded-xl border border-quartz-500/20">
-        Creates a live browser link — re-sync from your hard drive any time without re-uploading.
-      </div>
       <Input label="Source Name (optional)" value={name} onChange={(e: any) => setName(e.target.value)} placeholder="My Dataset" />
+
+      {/* Drop zone */}
+      <div
+        onDrop={onDrop}
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onClick={pick}
+        className={cn(
+          "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all",
+          dragOver ? "border-quartz-500/60 bg-quartz-500/5" : "border-white/10 hover:border-white/20 hover:bg-white/[0.02]"
+        )}
+      >
+        {loading ? (
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={24} className="animate-spin text-white/40" />
+            <p className="text-sm text-white/50">Processing file…</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-3xl">📂</p>
+            <div>
+              <p className="text-sm text-white/70 font-medium">Drop any file here, or click to browse</p>
+              <p className="text-xs text-white/30 mt-1">
+                PDF · Images · Excel · Word · CSV · JSON · Markdown · any text format
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {FILE_TYPES.map(ft => (
+          <span key={ft.label} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-white/30 border border-white/5">
+            {ft.label}
+          </span>
+        ))}
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-white/30 border border-white/5">+ more</span>
+      </div>
+
       <div className="flex gap-3 justify-end pt-2">
         <Button variant="ghost" onClick={onBack}>Back</Button>
-        <Button onClick={pick} disabled={loading}>
-          {loading ? <RefreshCw size={14} className="animate-spin mr-2" /> : null}
-          Select File
-        </Button>
       </div>
     </div>
   );

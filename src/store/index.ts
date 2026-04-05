@@ -5,14 +5,18 @@ import { genId } from "@/lib/utils";
 // Open union — supports all 110+ connector IDs from the registry
 export type SourceType = string;
 
+// How content is stored — determines how AI handles this source
+export type ContentType = "text" | "image" | "pdf" | "spreadsheet";
+
 export interface DataSourceMeta {
   id: string;
   name: string;
   type: SourceType;
+  contentType?: ContentType;   // defaults to "text" if absent
   status: "connected" | "loading" | "error";
   charCount: number;
   dateAdded: string;
-  summary?: string; 
+  summary?: string;
 }
 
 export interface AppSettings {
