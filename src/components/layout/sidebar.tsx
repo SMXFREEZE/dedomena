@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useAppStore } from "@/store";
 import { CONNECTORS_BY_ID } from "@/lib/connectors/registry";
 import { Database, Plus, Settings, Blocks, Sparkles, Network } from "lucide-react";
+import { ConnectorIcon } from "@/components/ui/connector-icon";
 import { cn, fmtChars } from "@/lib/utils";
 
 export function Sidebar({ 
@@ -99,9 +100,14 @@ export function Sidebar({
               className="px-3 py-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-default group"
             >
               <div className="flex items-center gap-2">
-                <span className="text-base leading-none shrink-0">
-                  {CONNECTORS_BY_ID[src.type]?.emoji ?? '🔌'}
-                </span>
+                <div className="shrink-0">
+                  <ConnectorIcon
+                    iconSlug={CONNECTORS_BY_ID[src.type]?.iconSlug}
+                    name={CONNECTORS_BY_ID[src.type]?.name ?? src.type}
+                    color={CONNECTORS_BY_ID[src.type]?.color ?? '#888888'}
+                    size={18}
+                  />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-medium truncate flex-1">{src.name}</span>

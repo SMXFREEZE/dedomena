@@ -36,7 +36,8 @@ export interface OAuthConfig {
 export interface Connector {
   id: string;
   name: string;
-  emoji: string;
+  iconSlug?: string;
+  emoji?: string;
   description: string;
   category: CategoryId;
   color: string;

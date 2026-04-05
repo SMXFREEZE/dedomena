@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Connector, CategoryId } from "@/lib/connectors/types";
 import { CONNECTORS, CATEGORIES } from "@/lib/connectors/registry";
+import { ConnectorIcon } from "@/components/ui/connector-icon";
 import { cn } from "@/lib/utils";
 
 interface SourceCatalogProps {
@@ -50,7 +51,7 @@ export function SourceCatalog({ onSelect }: SourceCatalogProps) {
         {CATEGORIES.map(cat => (
           <CategoryPill
             key={cat.id}
-            label={`${cat.emoji} ${cat.label}`}
+            label={cat.label}
             active={activeCategory === cat.id}
             onClick={() => setActiveCategory(cat.id)}
           />
@@ -103,10 +104,10 @@ function ConnectorCard({ connector, onClick }: { connector: Connector; onClick: 
     >
       {/* Icon */}
       <div
-        className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base"
+        className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
         style={{ backgroundColor: `${connector.color}18` }}
       >
-        <span role="img" aria-label={connector.name}>{connector.emoji}</span>
+        <ConnectorIcon iconSlug={connector.iconSlug} name={connector.name} color={connector.color} size={18} />
       </div>
 
       {/* Info */}

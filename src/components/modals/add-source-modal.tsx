@@ -7,6 +7,7 @@ import { Connector } from "@/lib/connectors/types";
 import { useAppStore, ContentStorage } from "@/store";
 import { SourceCatalog } from "./source-catalog";
 import { ConnectorForm } from "./connector-form";
+import { ConnectorIcon } from "@/components/ui/connector-icon";
 import { toast } from "sonner";
 
 export function AddSourceModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -44,7 +45,7 @@ export function AddSourceModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
           <div className="flex items-center gap-3">
             {selected && (
-              <span className="text-xl" role="img" aria-label={selected.name}>{selected.emoji}</span>
+              <ConnectorIcon iconSlug={selected.iconSlug} name={selected.name} color={selected.color} size={24} />
             )}
             <div>
               <h2 className="text-lg font-semibold tracking-tight">
