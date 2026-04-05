@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Connector, CategoryId } from "@/lib/connectors/types";
-import { CONNECTORS, CATEGORIES, hasManagedOAuth } from "@/lib/connectors/registry";
+import { CONNECTORS, CATEGORIES } from "@/lib/connectors/registry";
 import { ConnectorIcon } from "@/components/ui/connector-icon";
 import { cn } from "@/lib/utils";
 
@@ -119,11 +119,6 @@ function ConnectorCard({ connector, onClick }: { connector: Connector; onClick: 
           {connector.popular && (
             <span className="shrink-0 text-[9px] text-white/30 bg-white/5 px-1 py-0.5 rounded uppercase tracking-wider">
               popular
-            </span>
-          )}
-          {hasManagedOAuth(connector.id) && (
-            <span className="shrink-0 text-[9px] text-[#18bfff] bg-[#18bfff]/10 px-1 py-0.5 rounded uppercase tracking-wider border border-[#18bfff]/20">
-              OAuth
             </span>
           )}
         </div>
