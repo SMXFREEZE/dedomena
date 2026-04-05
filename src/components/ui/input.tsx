@@ -7,10 +7,11 @@ import { Eye, EyeOff } from "lucide-react";
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  helpText?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, label, error, ...props }, ref) => {
+  ({ className, type, label, error, helpText, ...props }, ref) => {
     const [showPassword, setShowPassword] = React.useState(false);
     const isPassword = type === "password";
 
@@ -44,6 +45,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error && <p className="text-xs text-red-500/90 mt-1">{error}</p>}
+        {helpText && !error && <p className="text-[11px] text-white/30 mt-1">{helpText}</p>}
       </div>
     );
   }

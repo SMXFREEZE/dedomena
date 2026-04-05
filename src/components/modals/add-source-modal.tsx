@@ -1,54 +1,32 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { X, FileText, Database, Globe, Cloud, LayoutGrid, Mail } from "lucide-react";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import { Connector } from "@/lib/connectors/types";
 import { useAppStore, ContentStorage } from "@/store";
-import { LocalFileForm, RestForm, GmailForm, AwsForm, SimpleForm } from "./source-forms";
+import { SourceCatalog } from "./source-catalog";
+import { ConnectorForm } from "./connector-form";
 import { toast } from "sonner";
 
-const TYPES = [
-  { id: "file", label: "Local File Link", desc: "Live syncing TXT, CSV, JSON", icon: FileText, color: "text-quartz-500" },
-  { id: "rest", label: "REST API", desc: "Any GET endpoint", icon: Globe, color: "text-emerald-500" },
-  { id: "gmail", label: "Gmail", desc: "Google OAuth Inbox", icon: Mail, color: "text-coral-500" },
-  { id: "aws", label: "AWS", desc: "S3 or DynamoDB", icon: Cloud, color: "text-[#ff9900]" },
-  { id: "notion", label: "Notion", desc: "Database/Page", icon: LayoutGrid, color: "text-white/80" },
-  { id: "azure", label: "Azure", desc: "Cosmos or Blob", icon: Cloud, color: "text-[#0078d4]" },
-  { id: "airtable", label: "Airtable", desc: "Base & Table", icon: Database, color: "text-[#18bfff]" },
-];
-
 export function AddSourceModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [step, setStep] = useState<string>("select");
+  const [selected, setSelected] = useState<Connector | null>(null);
   const { addSourceMeta } = useAppStore();
 
   if (!isOpen) return null;
 
-  const handleAdd = ({ name, type, content, handle }: any) => {
+  const handleAdd = ({ name, type, content }: { name: string; type: string; content: string }) => {
     const id = Math.random().toString(36).slice(2, 11);
     ContentStorage.save(id, content);
-    
-    // In a full implementation, the handle would be cached in a non-serializable store or indexedDB
-    // to allow re-fetching on mount or via a "Sync Now" button.
-    addSourceMeta({ id, name: name || "Unnamed Asset", type, charCount: content?.length || 0 });
-    
-    toast.success(`Successfully connected: ${name}`);
-    setStep("select");
+    addSourceMeta({ id, name: name || 'Unnamed Source', type: type as any, charCount: content?.length ?? 0 });
+    toast.success(`Connected: ${name}`);
+    setSelected(null);
     onClose();
   };
 
   const handleClose = () => {
-    setStep("select");
+    setSelected(null);
     onClose();
-  };
-
-  const renderForm = () => {
-    switch (step) {
-      case "file": return <LocalFileForm onAdd={handleAdd} onBack={() => setStep("select")} />;
-      case "rest": return <RestForm onAdd={handleAdd} onBack={() => setStep("select")} />;
-      case "gmail": return <GmailForm onAdd={handleAdd} onBack={() => setStep("select")} />;
-      case "aws": return <AwsForm onAdd={handleAdd} onBack={() => setStep("select")} />;
-      default: return <SimpleForm type={step} onAdd={handleAdd} onBack={() => setStep("select")} />;
-    }
   };
 
   return (
@@ -61,50 +39,60 @@ export function AddSourceModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
         className="bg-[#0b0b0e] border border-white/10 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl relative"
       >
         <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-quartz-500/30 to-transparent" />
-        
+
+        {/* Header */}
         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">
-              {step === "select" ? "Add Data Asset" : `Configure ${TYPES.find(t => t.id === step)?.label}`}
-            </h2>
-            <p className="text-sm text-white/40">
-              {step === "select" ? "Select a source to integrate dynamically." : "Provide credentials to establish connection."}
-            </p>
+          <div className="flex items-center gap-3">
+            {selected && (
+              <span className="text-xl" role="img" aria-label={selected.name}>{selected.emoji}</span>
+            )}
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">
+                {selected ? `Configure ${selected.name}` : 'Connect a Data Source'}
+              </h2>
+              <p className="text-sm text-white/40">
+                {selected ? selected.description : 'Search and connect any data source.'}
+              </p>
+            </div>
           </div>
-          <button onClick={handleClose} className="p-2 text-white/40 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full">
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={handleClose}
+            className="p-2 text-white/40 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full"
+          >
             <X size={16} />
           </button>
         </div>
 
+        {/* Content */}
         <div className="p-6">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: step === "select" ? -10 : 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: step === "select" ? 10 : -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              {step === "select" ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {TYPES.map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => setStep(type.id)}
-                      className="flex items-start text-left gap-4 p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/15 transition-all group"
-                    >
-                      <div className={`p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors ${type.color}`}>
-                        <type.icon size={18} />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold mb-1 text-white/90 group-hover:text-white transition-colors">{type.label}</h3>
-                        <p className="text-xs text-white/40 group-hover:text-white/50">{type.desc}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : renderForm()}
-            </motion.div>
+            {!selected ? (
+              <motion.div
+                key="catalog"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.15 }}
+              >
+                <SourceCatalog onSelect={setSelected} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
+              >
+                <ConnectorForm
+                  connector={selected}
+                  onAdd={handleAdd}
+                  onBack={() => setSelected(null)}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </motion.div>

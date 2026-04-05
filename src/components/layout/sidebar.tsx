@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useAppStore } from "@/store";
+import { CONNECTORS_BY_ID } from "@/lib/connectors/registry";
 import { Database, Plus, Settings, Blocks, Sparkles, Network } from "lucide-react";
 import { cn, fmtChars } from "@/lib/utils";
 
@@ -97,13 +98,20 @@ export function Sidebar({
               key={src.id}
               className="px-3 py-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-default group"
             >
-              <div className="flex items-center gap-2 mb-1">
-                <div className={cn("w-1.5 h-1.5 rounded-full", src.status === "connected" ? "bg-emerald-500" : "bg-white/20")} />
-                <span className="text-xs font-medium truncate flex-1">{src.name}</span>
-                <span className="text-[10px] text-white/30 font-mono">{fmtChars(src.charCount)}</span>
-              </div>
-              <div className="text-[10px] text-white/40 tracking-wider uppercase pl-3.5">
-                {src.type}
+              <div className="flex items-center gap-2">
+                <span className="text-base leading-none shrink-0">
+                  {CONNECTORS_BY_ID[src.type]?.emoji ?? '🔌'}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-medium truncate flex-1">{src.name}</span>
+                    <span className="text-[10px] text-white/30 font-mono shrink-0">{fmtChars(src.charCount)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", src.status === "connected" ? "bg-emerald-500" : "bg-amber-500")} />
+                    <span className="text-[10px] text-white/30 tracking-wider uppercase truncate">{src.type}</span>
+                  </div>
+                </div>
               </div>
             </motion.div>
           ))

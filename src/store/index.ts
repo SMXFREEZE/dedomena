@@ -2,7 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { genId } from "@/lib/utils";
 
-export type SourceType = "file" | "paste" | "rest" | "notion" | "airtable" | "gmail" | "aws" | "azure";
+// Open union — supports all 110+ connector IDs from the registry
+export type SourceType = string;
 
 export interface DataSourceMeta {
   id: string;
