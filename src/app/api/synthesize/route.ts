@@ -2,6 +2,35 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 120; // 2 min — needed for large datasets
 
+// ── Auto model selection ──────────────────────────────────────────────────────
+// Picks the right model silently based on task complexity and data volume.
+// No model names are ever exposed to the client.
+
+function autoSelectModel(query: string, sources: any[], mode: string): string {
+  const totalChars  = sources.reduce((n, s) => n + (s.content?.length ?? 0), 0);
+  const numSources  = sources.length;
+  const q           = query.toLowerCase();
+
+  // Signals that demand the highest-capability model
+  const isHeavy =
+    mode === "structured" ||
+    numSources > 8 ||
+    totalChars > 300_000 ||
+    /\b(comprehensive|detailed|audit|compare|correlation|forecast|trend|all sources|everything|report|analysis|compliance|risk|due diligence|quarterly|annual)\b/.test(q);
+
+  // Simple conversational queries on small data → fastest model
+  const isLight =
+    mode === "chat" &&
+    query.length < 60 &&
+    numSources <= 3 &&
+    totalChars < 50_000 &&
+    !isHeavy;
+
+  if (isLight)  return "claude-haiku-4-5-20251001"; // fast, cheap
+  if (isHeavy)  return "claude-sonnet-4-6";          // capable, balanced
+  return                "claude-sonnet-4-6";          // default
+}
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function parseDataUrl(dataUrl: string) {
@@ -145,12 +174,11 @@ If not found: {"summary":"The imported data does not contain relevant informatio
 
 export async function POST(req: NextRequest) {
   try {
-    const { query, sourcesData, systemPrompt, mode, selectedSourceIds, model: reqModel } = await req.json();
+    const { query, sourcesData, systemPrompt, mode, selectedSourceIds } = await req.json();
 
     const provider = process.env.AI_PROVIDER ?? "anthropic";
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
-    const model = reqModel ?? process.env.AI_MODEL ?? "claude-sonnet-4-6";
 
     if (provider === "anthropic" && !anthropicKey)
       return NextResponse.json({ error: "Anthropic API key not configured on server." }, { status: 500 });
@@ -165,6 +193,9 @@ export async function POST(req: NextRequest) {
     const hasContent = filtered.some((s: any) => s.content?.length > 0);
     if (!hasContent)
       return NextResponse.json({ error: "No source content available. Import data before querying." }, { status: 400 });
+
+    // Auto-select model based on task — never exposed to the client
+    const model = autoSelectModel(query, filtered, mode);
 
     const isChat = mode === "chat";
     const extra = systemPrompt?.trim() ? `${systemPrompt.trim()}\n\n` : "";

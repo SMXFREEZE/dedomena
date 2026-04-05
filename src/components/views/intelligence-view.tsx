@@ -200,7 +200,6 @@ export function IntelligenceView() {
           systemPrompt: settings.systemPrompt,
           mode: effectiveMode,
           selectedSourceIds,
-          model: settings.model,
         }),
       });
 
