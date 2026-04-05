@@ -124,7 +124,7 @@ function ConnectorCard({ connector, onClick }: { connector: Connector; onClick: 
         </div>
         <p className="text-[10px] text-white/35 leading-tight line-clamp-2">{connector.description}</p>
         <span className="text-[9px] text-white/20 uppercase tracking-wider mt-1 block">
-          {connector.executionMode === 'server' ? '⚙ server' : '⚡ instant'}
+          {connector.executionMode === 'server' ? 'server' : 'instant'}
         </span>
       </div>
     </button>
