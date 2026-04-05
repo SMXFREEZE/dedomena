@@ -1,11 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
 import { Network, ArrowRightLeft, Eraser, CheckCircle2 } from "lucide-react";
 
 export function EngineerView() {
+  const [rules, setRules] = useState({
+    impute: true,
+    normalize: true,
+    deduplicate: true,
+  });
+
+  const toggle = (key: keyof typeof rules) =>
+    setRules(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const ruleList = [
+    { key: "impute" as const,      icon: Eraser,          label: "Impute Missing Nulls" },
+    { key: "normalize" as const,   icon: ArrowRightLeft,  label: "Normalize Types" },
+    { key: "deduplicate" as const, icon: CheckCircle2,    label: "Deduplicate" },
+  ];
+
   return (
     <motion.div 
       className="absolute inset-0 p-8 lg:p-12 overflow-y-auto w-full h-full"
@@ -46,21 +62,25 @@ export function EngineerView() {
             <GlassCard>
               <h4 className="text-xs uppercase tracking-widest text-white/30 font-bold mb-4">Pipeline Rules</h4>
               <div className="space-y-3">
-                {[
-                  { icon: Eraser, label: "Impute Missing Nulls", active: true },
-                  { icon: ArrowRightLeft, label: "Normalize Types", active: true },
-                  { icon: CheckCircle2, label: "Deduplicate", active: true }
-                ].map((rule, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/[0.02]">
-                    <div className="flex items-center gap-3">
-                      <rule.icon size={14} className={rule.active ? "text-quartz-500" : "text-white/30"} />
-                      <span className="text-xs font-medium">{rule.label}</span>
-                    </div>
-                    <div className={`w-8 h-4 rounded-full border border-white/10 ${rule.active ? "bg-coral-500" : "bg-transparent"} relative transition-colors`}>
-                      <div className={`w-3 h-3 rounded-full bg-white absolute top-[1px] transition-all ${rule.active ? "right-[1px]" : "left-[1px]"}`} />
-                    </div>
-                  </div>
-                ))}
+                {ruleList.map((rule) => {
+                  const active = rules[rule.key];
+                  return (
+                    <button
+                      type="button"
+                      key={rule.key}
+                      onClick={() => toggle(rule.key)}
+                      className="w-full flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <rule.icon size={14} className={active ? "text-quartz-500" : "text-white/30"} />
+                        <span className="text-xs font-medium">{rule.label}</span>
+                      </div>
+                      <div className={`w-8 h-4 rounded-full border border-white/10 relative transition-colors ${active ? "bg-coral-500" : "bg-white/10"}`}>
+                        <div className={`w-3 h-3 rounded-full bg-white absolute top-[1px] transition-all ${active ? "right-[1px]" : "left-[1px]"}`} />
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </GlassCard>
           </motion.div>
