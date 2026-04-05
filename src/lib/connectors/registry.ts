@@ -5,12 +5,12 @@ const t = (key: string, label: string, ph = '', req = false): ConnectorField =>
   ({ key, label, type: 'text', placeholder: ph, required: req });
 const p = (key: string, label: string, ph = ''): ConnectorField =>
   ({ key, label, type: 'password', placeholder: ph, required: true });
-const u = (key: string, label: string, ph = ''): ConnectorField =>
-  ({ key, label, type: 'url', placeholder: ph });
-const n = (key: string, label: string, ph = ''): ConnectorField =>
-  ({ key, label, type: 'number', placeholder: ph });
+const u = (key: string, label: string, ph = '', req = false): ConnectorField =>
+  ({ key, label, type: 'url', placeholder: ph, required: req });
+const n = (key: string, label: string, ph = '', req = false): ConnectorField =>
+  ({ key, label, type: 'number', placeholder: ph, required: req });
 const sel = (key: string, label: string, opts: [string, string][]): ConnectorField =>
-  ({ key, label, type: 'select', options: opts.map(([value, label]) => ({ value, label })) });
+  ({ key, label, type: 'select', options: opts.map(([value, optLabel]) => ({ value, label: optLabel })) });
 const ta = (key: string, label: string, ph = ''): ConnectorField =>
   ({ key, label, type: 'textarea', placeholder: ph });
 const oauth = (): ConnectorField =>

@@ -5,10 +5,6 @@ import { CredentialMap } from '@/lib/connectors/types';
 const SESSION_KEY = 'dedomena_creds_session';
 const LOCAL_KEY   = 'dedomena_creds_v1';
 
-function readStore(storage: Storage): Record<string, CredentialMap> {
-  try { return JSON.parse(storage.getItem(SESSION_KEY === storage ? SESSION_KEY : LOCAL_KEY) ?? '{}'); }
-  catch { return {}; }
-}
 
 function readSession(): Record<string, CredentialMap> {
   try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) ?? '{}'); } catch { return {}; }
