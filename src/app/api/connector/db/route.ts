@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         const docs = await client.db(creds.database).collection(creds.collection).find({}).limit(limit).toArray();
         await client.close();
         return NextResponse.json({
-          content: docs.map((d, i) => `--- Document ${i + 1} ---\n${JSON.stringify(d, null, 2)}`).join('\n\n'),
+          content: docs.map((d: any, i: number) => `--- Document ${i + 1} ---\n${JSON.stringify(d, null, 2)}`).join('\n\n'),
           recordCount: docs.length,
         });
       }
