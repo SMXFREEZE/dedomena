@@ -44,8 +44,21 @@ export interface Connector {
   executionMode: ExecutionMode;
   fields: ConnectorField[];
   oauth?: OAuthConfig;
+  managedOAuth?: ManagedOAuthOption[];
   popular?: boolean;
   tags?: string[];
 }
 
 export type CredentialMap = Record<string, string>;
+
+// ── Managed OAuth (uses app-level env var credentials, no client ID from user) ──
+export interface ManagedOAuthOption {
+  provider:  string;        // 'google' | 'microsoft' | 'github' | 'slack' | etc.
+  label:     string;        // "Sign in with Google"
+  scopes:    string[];      // OAuth scopes to request
+  iconSlug?: string;        // simple-icons slug for the button icon
+  color?:    string;        // button accent color
+  /** If the connector needs a user-supplied value before OAuth (e.g. Shopify store domain),
+   *  list the field key here. The UI will show that field first, then the OAuth button. */
+  requiresField?: string;
+}

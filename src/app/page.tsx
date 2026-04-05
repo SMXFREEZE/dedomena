@@ -21,7 +21,38 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   const { addSourceMeta } = useAppStore();
 
-  // Generic OAuth callback handler — works for all connectors
+  // ── Managed OAuth: handle postMessage from popup (fallback: tab redirect) ────
+  useEffect(() => {
+    // Tab-redirect fallback: ?dedomena_oauth=<encoded-json>
+    const qs = new URLSearchParams(window.location.search);
+    const raw = qs.get('dedomena_oauth');
+    if (raw) {
+      try {
+        const payload = JSON.parse(decodeURIComponent(raw));
+        if (payload?.type === 'dedomena_oauth_result') {
+          history.replaceState(null, '', window.location.pathname);
+          if (payload.error) {
+            toast.error(`Authentication failed: ${payload.error}`);
+          } else if (payload.accessToken && payload.connectorId) {
+            const sid = payload.sourceId ?? Math.random().toString(36).slice(2, 11);
+            CredentialStorage.saveOAuth(sid, { accessToken: payload.accessToken });
+            const toastId = toast.loading(`Fetching data from ${payload.sourceName ?? 'source'}…`);
+            import('@/lib/connectors/fetchers').then(({ runClientFetcher }) =>
+              runClientFetcher(payload.connectorId, { accessToken: payload.accessToken })
+                .then(content => {
+                  ContentStorage.save(sid, content);
+                  addSourceMeta({ id: sid, name: payload.sourceName ?? 'Source', type: payload.connectorId, charCount: content.length });
+                  toast.success(`${payload.sourceName ?? 'Source'} connected`, { id: toastId });
+                })
+                .catch((e: Error) => toast.error(e.message, { id: toastId }))
+            );
+          }
+        }
+      } catch { /* ignore */ }
+    }
+  }, [addSourceMeta]);
+
+  // Generic OAuth callback handler — works for legacy connectors
   useEffect(() => {
     const result = detectOAuthCallback();
     if (!result) return;
