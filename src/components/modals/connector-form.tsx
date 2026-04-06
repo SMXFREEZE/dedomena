@@ -592,30 +592,6 @@ function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
     });
   };
 
-  const [copied, setCopied] = useState(false);
-
-  // Windows-friendly commands shown side by side
-  const cmdWindows = `node "%USERPROFILE%\\Downloads\\dedomena-bridge.js"`;
-  const cmdMac     = `node ~/Downloads/dedomena-bridge.js`;
-
-  const copyCmd = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // Fallback for browsers that block clipboard without user gesture
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity  = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div className="space-y-4">
       <Input
@@ -625,59 +601,48 @@ function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
         placeholder="My Desktop"
       />
 
-      {/* Step 1 — Download */}
+      {/* Step 1 — Windows: one-click launcher */}
       <div className="rounded-xl border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.02)] p-4 space-y-3">
         <div className="flex items-center gap-2">
           <span className="w-5 h-5 rounded-full bg-[#34d399]/15 border border-[#34d399]/30 text-[#34d399] text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
-          <p className="text-[12px] text-white/70 font-medium">Download the bridge script</p>
-        </div>
-        <a
-          href="/dedomena-bridge.js"
-          download="dedomena-bridge.js"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(52,211,153,0.08)] border border-[rgba(52,211,153,0.2)] text-[#34d399] text-[12px] font-medium hover:bg-[rgba(52,211,153,0.14)] transition-colors"
-        >
-          ↓ dedomena-bridge.js  <span className="text-[10px] text-white/25 ml-auto">saves to Downloads</span>
-        </a>
-      </div>
-
-      {/* Step 2 — Run in terminal */}
-      <div className="rounded-xl border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.02)] p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-[#34d399]/15 border border-[#34d399]/30 text-[#34d399] text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
-          <p className="text-[12px] text-white/70 font-medium">Open a terminal and paste this</p>
+          <p className="text-[12px] text-white/70 font-medium">Download the launcher</p>
         </div>
 
-        {/* Windows command */}
-        <div>
-          <p className="text-[9px] text-white/25 uppercase tracking-widest mb-1">Windows</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-black/40 border border-[rgba(255,255,255,0.08)] rounded-lg px-3 py-2 text-[11px] font-mono text-[#34d399]/80 select-all break-all">
-              {cmdWindows}
-            </code>
-            <button type="button" onClick={() => copyCmd(cmdWindows)}
-              className="shrink-0 px-2.5 py-2 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-white/40 hover:text-white/80 text-[10px] transition-colors min-w-[44px] text-center">
-              {copied ? '✓' : 'copy'}
-            </button>
-          </div>
+        {/* Windows */}
+        <div className="space-y-1.5">
+          <p className="text-[9px] text-white/25 uppercase tracking-widest">Windows</p>
+          <a
+            href="/dedomena-bridge.bat"
+            download="dedomena-bridge.bat"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[rgba(52,211,153,0.08)] border border-[rgba(52,211,153,0.2)] text-[#34d399] text-[12px] font-medium hover:bg-[rgba(52,211,153,0.14)] transition-colors"
+          >
+            <span className="text-lg">⬇</span>
+            <div>
+              <p className="font-semibold">dedomena-bridge.bat</p>
+              <p className="text-[10px] text-white/30">Download · double-click · done</p>
+            </div>
+          </a>
         </div>
 
-        {/* Mac/Linux command */}
-        <div>
-          <p className="text-[9px] text-white/25 uppercase tracking-widest mb-1">Mac / Linux</p>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-black/40 border border-[rgba(255,255,255,0.08)] rounded-lg px-3 py-2 text-[11px] font-mono text-[#34d399]/80 select-all">
-              {cmdMac}
-            </code>
-            <button type="button" onClick={() => copyCmd(cmdMac)}
-              className="shrink-0 px-2.5 py-2 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-white/40 hover:text-white/80 text-[10px] transition-colors min-w-[44px] text-center">
-              {copied ? '✓' : 'copy'}
-            </button>
-          </div>
+        {/* Mac / Linux */}
+        <div className="space-y-1.5">
+          <p className="text-[9px] text-white/25 uppercase tracking-widest">Mac / Linux</p>
+          <a
+            href="/dedomena-bridge.js"
+            download="dedomena-bridge.js"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] text-white/60 text-[12px] font-medium hover:bg-[rgba(255,255,255,0.06)] transition-colors"
+          >
+            <span className="text-lg">⬇</span>
+            <div>
+              <p className="font-semibold">dedomena-bridge.js</p>
+              <p className="text-[10px] text-white/30">Then run: <code className="font-mono text-white/40">node ~/Downloads/dedomena-bridge.js</code></p>
+            </div>
+          </a>
         </div>
 
-        <p className="text-[10px] text-white/25 leading-relaxed">
-          Node.js required (already installed if you see a version number when you run <code className="text-white/35">node -v</code>).
-          No npm install needed — the script uses only built-in modules.
+        <p className="text-[10px] text-white/20 leading-relaxed">
+          Node.js must be installed — <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer" className="text-white/35 hover:text-white/60 underline underline-offset-2">nodejs.org</a>.
+          No npm install, no account, runs 100% locally.
         </p>
       </div>
 
