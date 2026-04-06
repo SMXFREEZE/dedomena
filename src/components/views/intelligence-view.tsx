@@ -252,23 +252,29 @@ export function IntelligenceView() {
           } catch { /* ignore */ }
 
           try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 8000);
             const res = await fetch('http://127.0.0.1:7432/search', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ query: q, rootPath }),
-              signal: AbortSignal.timeout(8000),
-            });
+              signal: controller.signal,
+            }).finally(() => clearTimeout(timer));
+
             if (res.ok) {
               const data = await res.json();
-              const content = (data.snippets as any[])
-                .map((s: any) => `[${s.name}  —  ${s.dir}]\n${s.excerpt}`)
-                .join('\n\n---\n\n');
-              if (content.trim()) {
-                bridgeSourcesData.push({ ...src, content: `Local filesystem search results for "${q}":\n\n${content}` });
-              }
+              const snippets: any[] = data.snippets ?? [];
+              const content = snippets.length > 0
+                ? snippets.map((s: any) => `[${s.name} — ${s.dir}]\n${s.excerpt}`).join('\n\n---\n\n')
+                : `No files found on local filesystem matching "${q}". The bridge is running but the search returned no results.`;
+              bridgeSourcesData.push({ ...src, content: `=== Desktop Bridge: ${src.name} ===\n${content}` });
+            } else {
+              bridgeSourcesData.push({ ...src, content: `[Desktop Bridge returned error ${res.status}]` });
             }
           } catch {
-            toast.error('Desktop Bridge is not running. Start it in your terminal.');
+            toast.error('Desktop Bridge is not reachable. Make sure the terminal is still running.');
+            // Still push a placeholder so synthesize doesn't reject with "no content"
+            bridgeSourcesData.push({ ...src, content: `[Desktop Bridge is not running — user needs to start dedomena-bridge.js in their terminal]` });
           }
         }
       }
