@@ -592,7 +592,29 @@ function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
     });
   };
 
-  const command = `node dedomena-bridge.js`;
+  const [copied, setCopied] = useState(false);
+
+  // Windows-friendly commands shown side by side
+  const cmdWindows = `node "%USERPROFILE%\\Downloads\\dedomena-bridge.js"`;
+  const cmdMac     = `node ~/Downloads/dedomena-bridge.js`;
+
+  const copyCmd = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Fallback for browsers that block clipboard without user gesture
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity  = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="space-y-4">
@@ -603,7 +625,7 @@ function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
         placeholder="My Desktop"
       />
 
-      {/* Step 1 — Download & run */}
+      {/* Step 1 — Download */}
       <div className="rounded-xl border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.02)] p-4 space-y-3">
         <div className="flex items-center gap-2">
           <span className="w-5 h-5 rounded-full bg-[#34d399]/15 border border-[#34d399]/30 text-[#34d399] text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
@@ -614,7 +636,7 @@ function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
           download="dedomena-bridge.js"
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(52,211,153,0.08)] border border-[rgba(52,211,153,0.2)] text-[#34d399] text-[12px] font-medium hover:bg-[rgba(52,211,153,0.14)] transition-colors"
         >
-          ↓ dedomena-bridge.js
+          ↓ dedomena-bridge.js  <span className="text-[10px] text-white/25 ml-auto">saves to Downloads</span>
         </a>
       </div>
 
@@ -622,24 +644,40 @@ function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
       <div className="rounded-xl border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.02)] p-4 space-y-3">
         <div className="flex items-center gap-2">
           <span className="w-5 h-5 rounded-full bg-[#34d399]/15 border border-[#34d399]/30 text-[#34d399] text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
-          <p className="text-[12px] text-white/70 font-medium">Open a terminal and run it</p>
+          <p className="text-[12px] text-white/70 font-medium">Open a terminal and paste this</p>
         </div>
-        <div className="flex items-center gap-2">
-          <code className="flex-1 block bg-black/40 border border-[rgba(255,255,255,0.08)] rounded-lg px-3 py-2 text-[11px] font-mono text-[#34d399]/90 select-all">
-            {command}
-          </code>
-          <button
-            type="button"
-            onClick={() => navigator.clipboard.writeText(command)}
-            className="shrink-0 px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-white/40 hover:text-white/70 text-[10px] transition-colors"
-            title="Copy command"
-          >
-            copy
-          </button>
+
+        {/* Windows command */}
+        <div>
+          <p className="text-[9px] text-white/25 uppercase tracking-widest mb-1">Windows</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 bg-black/40 border border-[rgba(255,255,255,0.08)] rounded-lg px-3 py-2 text-[11px] font-mono text-[#34d399]/80 select-all break-all">
+              {cmdWindows}
+            </code>
+            <button type="button" onClick={() => copyCmd(cmdWindows)}
+              className="shrink-0 px-2.5 py-2 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-white/40 hover:text-white/80 text-[10px] transition-colors min-w-[44px] text-center">
+              {copied ? '✓' : 'copy'}
+            </button>
+          </div>
         </div>
-        <p className="text-[10px] text-white/30 leading-relaxed">
-          Optionally pass a folder path: <code className="text-white/40">node dedomena-bridge.js ~/Documents</code>
-          <br />Node.js required — <span className="text-white/20">no install, no account, runs 100% locally.</span>
+
+        {/* Mac/Linux command */}
+        <div>
+          <p className="text-[9px] text-white/25 uppercase tracking-widest mb-1">Mac / Linux</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 bg-black/40 border border-[rgba(255,255,255,0.08)] rounded-lg px-3 py-2 text-[11px] font-mono text-[#34d399]/80 select-all">
+              {cmdMac}
+            </code>
+            <button type="button" onClick={() => copyCmd(cmdMac)}
+              className="shrink-0 px-2.5 py-2 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-white/40 hover:text-white/80 text-[10px] transition-colors min-w-[44px] text-center">
+              {copied ? '✓' : 'copy'}
+            </button>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-white/25 leading-relaxed">
+          Node.js required (already installed if you see a version number when you run <code className="text-white/35">node -v</code>).
+          No npm install needed — the script uses only built-in modules.
         </p>
       </div>
 
