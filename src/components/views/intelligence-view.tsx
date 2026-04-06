@@ -264,9 +264,16 @@ export function IntelligenceView() {
             if (res.ok) {
               const data = await res.json();
               const snippets: any[] = data.snippets ?? [];
-              const content = snippets.length > 0
-                ? snippets.map((s: any) => `[${s.name} — ${s.dir}]\n${s.excerpt}`).join('\n\n---\n\n')
-                : `No files found on local filesystem matching "${q}". The bridge is running but the search returned no results.`;
+              const keywords: string[] = data.keywords ?? [];
+              let content: string;
+              if (snippets.length > 0) {
+                content = `Keywords searched: [${keywords.join(', ')}]\nFiles found: ${snippets.length}\n\n` +
+                  snippets.map((s: any) => `📄 ${s.name}\n📁 ${s.dir}\n${s.excerpt}`).join('\n\n---\n\n');
+              } else {
+                content = `Keywords searched: [${keywords.join(', ')}]\n` +
+                  `No matching files found. The bridge searched ${rootPath || 'home directory'} but found nothing matching these keywords.\n` +
+                  `Suggestion: Try asking with specific file/folder names if you know them.`;
+              }
               bridgeSourcesData.push({ ...src, content: `=== Desktop Bridge: ${src.name} ===\n${content}` });
             } else {
               bridgeSourcesData.push({ ...src, content: `[Desktop Bridge returned error ${res.status}]` });
