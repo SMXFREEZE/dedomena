@@ -212,6 +212,31 @@ async function extractFileContent(file: File): Promise<{ content: string; conten
   return { content: await file.text(), contentType: 'text' };
 }
 
+// Recursively collect all File objects from a FileSystemEntry tree
+async function collectFromEntry(entry: any): Promise<File[]> {
+  if (entry.isFile) {
+    return new Promise(resolve => entry.file((f: File) => resolve([f]), () => resolve([])));
+  }
+  if (entry.isDirectory) {
+    const reader = entry.createReader();
+    const allEntries: any[] = [];
+    // readEntries may return results in batches — keep reading until empty
+    await new Promise<void>(resolve => {
+      const readBatch = () => {
+        reader.readEntries((batch: any[]) => {
+          if (batch.length === 0) { resolve(); return; }
+          allEntries.push(...batch);
+          readBatch();
+        }, () => resolve());
+      };
+      readBatch();
+    });
+    const nested = await Promise.all(allEntries.map(collectFromEntry));
+    return nested.flat();
+  }
+  return [];
+}
+
 function LocalFileForm({ name, setName, onAdd, onAddSilent, onBack }: any) {
   const [dragOver, setDragOver]     = useState(false);
   const [pickMode, setPickMode]     = useState<'files' | 'folder'>('files');
@@ -277,8 +302,21 @@ function LocalFileForm({ name, setName, onAdd, onAddSilent, onBack }: any) {
   const onDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    const files = Array.from(e.dataTransfer.files ?? []);
-    await processFiles(files);
+
+    // Use DataTransferItem entry API so dropped folders are traversed recursively
+    const items = Array.from(e.dataTransfer.items ?? []);
+    const entries = items
+      .filter(i => i.kind === 'file')
+      .map(i => (i as any).webkitGetAsEntry?.())
+      .filter(Boolean);
+
+    if (entries.length > 0) {
+      const nested = await Promise.all(entries.map(collectFromEntry));
+      await processFiles(nested.flat());
+    } else {
+      // Fallback for browsers without entry API
+      await processFiles(Array.from(e.dataTransfer.files ?? []));
+    }
   };
 
   const isLoading = progress !== null;
@@ -339,8 +377,8 @@ function LocalFileForm({ name, setName, onAdd, onAddSilent, onBack }: any) {
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-white/70 font-medium">Drop files here, or click to browse</p>
-                  <p className="text-xs text-white/30 mt-1">Select multiple files at once · PDF · CSV · JSON · Excel · Images · any text</p>
+                  <p className="text-sm text-white/70 font-medium">Drop files or folders here, or click to browse</p>
+                  <p className="text-xs text-white/30 mt-1">Files, folders, or mixed — PDF · CSV · JSON · Excel · Images · any text</p>
                 </>
               )}
             </div>
