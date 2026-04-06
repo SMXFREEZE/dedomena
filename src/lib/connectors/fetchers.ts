@@ -163,7 +163,7 @@ async function fetchSlack(creds: CredentialMap): Promise<string> {
   const chRes = await fetch('https://slack.com/api/conversations.list?types=public_channel,private_channel&limit=200', { headers: h });
   const channels = ((await chRes.json()).channels ?? []) as any[];
   const results: string[] = [];
-  for (const ch of channels.slice(0, 10)) {
+  for (const ch of channels.slice(0, 50)) {
     const mRes = await fetch(`https://slack.com/api/conversations.history?channel=${ch.id}&limit=200`, { headers: h });
     const msgs = ((await mRes.json()).messages ?? []) as any[];
     results.push(`=== #${ch.name} ===\n${msgs.map(m => `[${new Date(Number(m.ts) * 1000).toISOString()}] ${m.text}`).join('\n')}`);
@@ -522,12 +522,79 @@ async function fetchVercel(creds: CredentialMap): Promise<string> {
   return fmt(d.deployments ?? [], (dep, i) => `--- Deployment ${i + 1} ---\nProject: ${dep.name}\nURL: ${dep.url}\nState: ${dep.state}\nCreated: ${new Date(dep.createdAt).toISOString()}`);
 }
 
-// ── AWS (DynamoDB + S3 from existing api.ts) ──────────────────────────────────
-// These delegate to the server route for TCP-based AWS SDK calls
-// but DynamoDB via HTTP is handled here:
+// ── DynamoDB via AWS REST API ──────────────────────────────────────────────────
 async function fetchDynamoDB(creds: CredentialMap): Promise<string> {
-  // Delegated to server route — return sentinel
-  throw new Error('DynamoDB uses server-side execution. Delegating to /api/connector/db');
+  // AWS Signature V4 for DynamoDB REST
+  const region   = creds.region || 'us-east-1';
+  const table    = creds.tableName;
+  if (!table) throw new Error('Table Name is required for DynamoDB.');
+  if (!creds.accessKeyId || !creds.secretAccessKey) throw new Error('Access Key ID and Secret Access Key are required.');
+
+  const endpoint = `https://dynamodb.${region}.amazonaws.com/`;
+  const body     = JSON.stringify({ TableName: table, Limit: 500 });
+  const now      = new Date();
+  const amzDate  = now.toISOString().replace(/[:-]|\.\d{3}/g, '').slice(0, 15) + 'Z';
+  const dateStamp = amzDate.slice(0, 8);
+
+  // SHA-256 hash helper (browser + Node compatible via Web Crypto)
+  const sha256hex = async (data: string) => {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+  const hmac = async (key: ArrayBuffer, data: string): Promise<ArrayBuffer> => {
+    const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return crypto.subtle.sign('HMAC', k, new TextEncoder().encode(data));
+  };
+
+  const bodyHash = await sha256hex(body);
+  const canonicalHeaders = `content-type:application/x-amz-json-1.0\nhost:dynamodb.${region}.amazonaws.com\nx-amz-date:${amzDate}\nx-amz-target:DynamoDB_20120810.Scan\n`;
+  const signedHeaders = 'content-type;host;x-amz-date;x-amz-target';
+  const canonicalRequest = ['POST', '/', '', canonicalHeaders, signedHeaders, bodyHash].join('\n');
+  const credScope = `${dateStamp}/${region}/dynamodb/aws4_request`;
+  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, credScope, await sha256hex(canonicalRequest)].join('\n');
+
+  const enc = new TextEncoder();
+  const kDate    = await hmac(enc.encode(`AWS4${creds.secretAccessKey}`).buffer as ArrayBuffer, dateStamp);
+  const kRegion  = await hmac(kDate, region);
+  const kService = await hmac(kRegion, 'dynamodb');
+  const kSigning = await hmac(kService, 'aws4_request');
+  const sigBuf   = await hmac(kSigning, stringToSign);
+  const signature = Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const authHeader = `AWS4-HMAC-SHA256 Credential=${creds.accessKeyId}/${credScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-amz-json-1.0',
+      'X-Amz-Target': 'DynamoDB_20120810.Scan',
+      'X-Amz-Date': amzDate,
+      'Authorization': authHeader,
+    },
+    body,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message ?? err.__type ?? `DynamoDB error ${res.status}`);
+  }
+
+  const data = await res.json();
+  const items = data.Items ?? [];
+  // Deserialize DynamoDB attribute format { "S": "value" } → plain string
+  const deser = (attr: any): any => {
+    if (attr.S !== undefined) return attr.S;
+    if (attr.N !== undefined) return Number(attr.N);
+    if (attr.BOOL !== undefined) return attr.BOOL;
+    if (attr.NULL) return null;
+    if (attr.L) return attr.L.map(deser);
+    if (attr.M) return Object.fromEntries(Object.entries(attr.M).map(([k, v]) => [k, deser(v)]));
+    return JSON.stringify(attr);
+  };
+  const rows = items.map((item: any) => Object.fromEntries(Object.entries(item).map(([k, v]) => [k, deser(v)])));
+  return rows.map((r: any, i: number) =>
+    `--- Item ${i + 1} ---\n${Object.entries(r).map(([k, v]) => `${k}: ${JSON.stringify(v)}`).join('\n')}`
+  ).join('\n\n');
 }
 
 // ── Main dispatcher ────────────────────────────────────────────────────────────

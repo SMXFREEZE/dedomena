@@ -9,7 +9,7 @@ import { CONNECTORS_BY_ID } from "@/lib/connectors/registry";
 import {
   Search, Sparkles, Command, RefreshCw, Layers,
   MessageSquare, BarChart2, Copy, Check, Download,
-  ChevronRight, History, X, Database, AlertTriangle,
+  ChevronRight, History, Database, AlertTriangle,
 } from "lucide-react";
 import { useAppStore, ContentStorage } from "@/store";
 import { toast } from "sonner";
@@ -215,23 +215,37 @@ export function IntelligenceView() {
         const reader = res.body!.getReader();
         const decoder = new TextDecoder();
         let accumulated = "";
+        let lastFlush = 0;
 
         setMessages(prev => [...prev, { role: "assistant", content: "", streaming: true }]);
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          accumulated += decoder.decode(value, { stream: true });
-          setMessages(prev => {
-            const msgs = [...prev];
-            msgs[msgs.length - 1] = { role: "assistant", content: accumulated, streaming: true };
-            return msgs;
-          });
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            accumulated += decoder.decode(value, { stream: true });
+            // Throttle re-renders: flush at most every 40ms
+            const now = Date.now();
+            if (now - lastFlush > 40) {
+              lastFlush = now;
+              const snap = accumulated;
+              setMessages(prev => {
+                const msgs = [...prev];
+                msgs[msgs.length - 1] = { role: "assistant", content: snap, streaming: true };
+                return msgs;
+              });
+            }
+          }
+        } catch (streamErr: any) {
+          // Stream interrupted — keep what we got, mark as done
+          accumulated += accumulated ? "\n\n[Response interrupted]" : "[Connection interrupted]";
+        } finally {
+          reader.cancel().catch(() => {});
         }
 
         setMessages(prev => {
           const msgs = [...prev];
-          msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], streaming: false };
+          msgs[msgs.length - 1] = { role: "assistant", content: accumulated, streaming: false };
           return msgs;
         });
       } else {
