@@ -257,10 +257,10 @@ export const CONNECTORS: Connector[] = [
     fields: [],
   },
   {
-    id: 'screen-capture', name: 'Screen Capture', color: '#a78bfa',
+    id: 'desktop-connect', name: 'Desktop Connect', color: '#a78bfa',
     category: 'storage', executionMode: 'client', popular: true,
-    description: 'Share your screen or any window — Claude will see and analyze it.',
-    tags: ['screen', 'screenshot', 'desktop', 'capture', 'window'],
+    description: 'Grant access to any folder on your computer — Claude reads every file inside.',
+    tags: ['desktop', 'folder', 'local', 'filesystem', 'directory', 'files'],
     fields: [],
   },
   {

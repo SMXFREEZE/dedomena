@@ -33,8 +33,8 @@ export function ConnectorForm({ connector, onAdd, onAddSilent, onBack }: Connect
     return <LocalFileForm name={name} setName={setName} onAdd={onAdd} onAddSilent={onAddSilent} onBack={onBack} />;
   }
 
-  if (connector.id === 'screen-capture') {
-    return <ScreenCaptureForm name={name} setName={setName} onAdd={onAdd} onBack={onBack} />;
+  if (connector.id === 'desktop-connect') {
+    return <DesktopConnectForm onAdd={onAdd} onAddSilent={onAddSilent} onBack={onBack} />;
   }
 
   // ── Paste text ────────────────────────────────────────────────────────────
@@ -400,123 +400,155 @@ function LocalFileForm({ name, setName, onAdd, onAddSilent, onBack }: any) {
   );
 }
 
-// ── Screen capture form ────────────────────────────────────────────────────────
-function ScreenCaptureForm({ name, setName, onAdd, onBack }: any) {
-  const [status, setStatus] = useState<'idle' | 'picking' | 'captured' | 'error'>('idle');
-  const [preview, setPreview] = useState<string | null>(null);
+// ── Desktop connect form ───────────────────────────────────────────────────────
+async function* walkDirectory(dirHandle: any): AsyncGenerator<File> {
+  for await (const [, handle] of dirHandle) {
+    if (handle.kind === 'file') {
+      yield handle.getFile();
+    } else if (handle.kind === 'directory') {
+      yield* walkDirectory(handle);
+    }
+  }
+}
+
+function DesktopConnectForm({ onAdd, onAddSilent, onBack }: any) {
+  const [status, setStatus]   = useState<'idle' | 'scanning' | 'importing' | 'done' | 'error'>('idle');
+  const [dirName, setDirName] = useState('');
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const capture = async () => {
-    setStatus('picking');
-    setErrorMsg('');
-    let stream: MediaStream | null = null;
+  const connect = async () => {
+    if (!(window as any).showDirectoryPicker) {
+      setErrorMsg('Your browser does not support the File System Access API. Use Chrome or Edge.');
+      setStatus('error');
+      return;
+    }
     try {
-      stream = await (navigator.mediaDevices as any).getDisplayMedia({
-        video: { displaySurface: 'monitor' },
-        audio: false,
-      }) as MediaStream;
-      const track = stream.getVideoTracks()[0];
-      const imageCapture = new (window as any).ImageCapture(track);
-      const bitmap = await imageCapture.grabFrame();
+      const dirHandle = await (window as any).showDirectoryPicker({ mode: 'read' });
+      setDirName(dirHandle.name);
+      setStatus('scanning');
 
-      const canvas = document.createElement('canvas');
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      canvas.getContext('2d')!.drawImage(bitmap, 0, 0);
-      const dataUrl = canvas.toDataURL('image/png');
+      // Collect all files first so we know the total count
+      const files: File[] = [];
+      for await (const file of walkDirectory(dirHandle)) {
+        files.push(file);
+      }
 
-      setPreview(dataUrl);
-      setStatus('captured');
+      if (files.length === 0) {
+        setErrorMsg('No files found in that folder.');
+        setStatus('error');
+        return;
+      }
+
+      setStatus('importing');
+      setProgress({ done: 0, total: files.length });
+
+      let done = 0;
+      const errors: string[] = [];
+
+      for (const file of files) {
+        try {
+          const { content, contentType } = await extractFileContent(file);
+          (onAddSilent ?? onAdd)({ name: file.name, type: 'desktop-connect', content, contentType });
+        } catch {
+          errors.push(file.name);
+        }
+        done++;
+        setProgress({ done, total: files.length });
+      }
+
+      const imported = files.length - errors.length;
+      if (errors.length > 0) toast.error(`${errors.length} file(s) could not be read`);
+      if (imported > 0) toast.success(`${imported} file${imported > 1 ? 's' : ''} imported from "${dirHandle.name}"`);
+
+      setStatus('done');
+      setProgress(null);
+
+      setTimeout(() => onBack(), 1200);
     } catch (e: any) {
-      if (e?.name === 'NotAllowedError' || e?.message?.toLowerCase().includes('cancel')) {
-        setStatus('idle');
+      if (e?.name === 'AbortError') {
+        setStatus('idle'); // user cancelled picker
       } else {
-        setErrorMsg(e?.message ?? 'Screen capture failed');
+        setErrorMsg(e?.message ?? 'Failed to access folder');
         setStatus('error');
       }
-    } finally {
-      stream?.getTracks().forEach(t => t.stop());
     }
   };
 
-  const handleImport = () => {
-    if (!preview) return;
-    onAdd({
-      name: name || `Screen ${new Date().toLocaleTimeString()}`,
-      type: 'screen-capture',
-      content: preview,
-      contentType: 'image',
-    });
-  };
-
-  const reset = () => { setStatus('idle'); setPreview(null); };
+  const isLoading = status === 'scanning' || status === 'importing';
 
   return (
     <div className="space-y-4">
-      <Input
-        label="Source Name (optional)"
-        value={name}
-        onChange={(e: any) => setName(e.target.value)}
-        placeholder={`Screen ${new Date().toLocaleTimeString()}`}
-      />
-
+      {/* Idle / error — show connect button */}
       {(status === 'idle' || status === 'error') && (
         <button
           type="button"
-          onClick={capture}
-          className="w-full border-2 border-dashed border-white/10 hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/5 rounded-xl p-8 text-center transition-all cursor-pointer"
+          onClick={connect}
+          className="w-full border-2 border-dashed border-white/10 hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/5 rounded-xl p-10 text-center transition-all cursor-pointer group"
         >
-          <div className="flex flex-col items-center gap-3">
-            <div className="text-3xl">🖥️</div>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-[#a78bfa]/10 border border-[#a78bfa]/20 flex items-center justify-center text-3xl group-hover:bg-[#a78bfa]/15 transition-colors">
+              🖥️
+            </div>
             <div>
-              <p className="text-sm text-white/70 font-medium">Click to share your screen</p>
-              <p className="text-xs text-white/30 mt-1">
-                Choose a window, tab, or your entire desktop — Claude will see it
+              <p className="text-sm text-white/80 font-semibold">Connect your Desktop</p>
+              <p className="text-xs text-white/35 mt-1.5 leading-relaxed max-w-xs mx-auto">
+                Grant access to any folder — your Desktop, Documents, or a project directory.
+                Claude will read every file inside and can answer questions about all of it.
               </p>
+            </div>
+            <div className="flex gap-2 flex-wrap justify-center">
+              {['Desktop', 'Documents', 'Downloads', 'Any folder'].map(l => (
+                <span key={l} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-white/30 border border-white/5">{l}</span>
+              ))}
             </div>
           </div>
         </button>
       )}
 
-      {status === 'picking' && (
-        <div className="border-2 border-dashed border-[#a78bfa]/40 rounded-xl p-8 text-center">
-          <div className="flex flex-col items-center gap-3">
-            <RefreshCw size={24} className="animate-spin text-[#a78bfa]/60" />
-            <p className="text-sm text-white/50">Waiting for screen selection…</p>
+      {/* Scanning */}
+      {status === 'scanning' && (
+        <div className="border border-white/10 rounded-xl p-8 text-center space-y-3">
+          <RefreshCw size={24} className="animate-spin text-[#a78bfa]/60 mx-auto" />
+          <p className="text-sm text-white/60">Scanning <span className="text-white/80 font-medium">"{dirName}"</span>…</p>
+          <p className="text-xs text-white/30">Counting files</p>
+        </div>
+      )}
+
+      {/* Importing */}
+      {status === 'importing' && progress && (
+        <div className="border border-white/10 rounded-xl p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-xl bg-[#a78bfa]/10 flex items-center justify-center text-2xl mx-auto">🖥️</div>
+          <div>
+            <p className="text-sm text-white/70 font-medium">Importing from "{dirName}"</p>
+            <p className="text-xs text-white/40 mt-1">{progress.done} / {progress.total} files</p>
+          </div>
+          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#a78bfa]/60 rounded-full transition-all duration-150"
+              style={{ '--p': `${(progress.done / progress.total) * 100}%`, width: 'var(--p)' } as React.CSSProperties}
+            />
           </div>
         </div>
       )}
 
-      {status === 'captured' && preview && (
-        <div className="space-y-3">
-          <div className="relative rounded-xl overflow-hidden border border-white/10">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="Screen capture preview" className="w-full max-h-48 object-contain bg-black/40" />
-            <button
-              type="button"
-              onClick={reset}
-              className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-black/60 text-white/60 hover:text-white text-[10px] transition-colors"
-            >
-              Retake
-            </button>
-          </div>
-          <p className="text-[11px] text-white/30 text-center">
-            Claude will analyze this screenshot as an image source
-          </p>
+      {/* Done */}
+      {status === 'done' && (
+        <div className="border border-emerald-500/20 rounded-xl p-8 text-center space-y-2 bg-emerald-500/5">
+          <p className="text-2xl">✓</p>
+          <p className="text-sm text-emerald-400 font-medium">All files imported</p>
+          <p className="text-xs text-white/30">Returning to catalog…</p>
         </div>
       )}
 
       {status === 'error' && (
-        <p className="text-xs text-red-400/80">{errorMsg}</p>
+        <p className="text-xs text-red-400/80 px-1">{errorMsg}</p>
       )}
 
-      <div className="flex gap-3 justify-end pt-2">
-        <Button variant="ghost" onClick={onBack}>Back</Button>
-        {status === 'captured' && (
-          <Button onClick={handleImport}>Import Screenshot</Button>
-        )}
+      <div className="flex gap-3 justify-end pt-1">
+        <Button variant="ghost" onClick={onBack} disabled={isLoading}>Back</Button>
         {(status === 'idle' || status === 'error') && (
-          <Button onClick={capture}>Share Screen</Button>
+          <Button onClick={connect}>Connect Folder</Button>
         )}
       </div>
     </div>

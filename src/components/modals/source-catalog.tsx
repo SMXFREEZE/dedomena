@@ -27,8 +27,8 @@ export function SourceCatalog({ onSelect }: SourceCatalogProps) {
     }).sort((a, b) => {
       if (a.id === 'local-file') return -1;
       if (b.id === 'local-file') return 1;
-      if (a.id === 'screen-capture') return -1;
-      if (b.id === 'screen-capture') return 1;
+      if (a.id === 'desktop-connect') return -1;
+      if (b.id === 'desktop-connect') return 1;
       if (a.popular && !b.popular) return -1;
       if (!a.popular && b.popular) return 1;
       return a.name.localeCompare(b.name);
