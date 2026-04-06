@@ -376,7 +376,7 @@ function ScreenCaptureForm({ name, setName, onAdd, onBack }: any) {
       stream = await (navigator.mediaDevices as any).getDisplayMedia({
         video: { displaySurface: 'monitor' },
         audio: false,
-      });
+      }) as MediaStream;
       const track = stream.getVideoTracks()[0];
       const imageCapture = new (window as any).ImageCapture(track);
       const bitmap = await imageCapture.grabFrame();
