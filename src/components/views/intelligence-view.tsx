@@ -32,7 +32,7 @@ const fadeUp = {
   transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] as const },
 };
 
-const SUGGESTED_QUERIES = [
+const BASE_SUGGESTIONS = [
   "Summarise the key themes across all my data",
   "What are the most important metrics or KPIs?",
   "Identify any risks, gaps, or anomalies",
@@ -40,6 +40,39 @@ const SUGGESTED_QUERIES = [
   "Who are the main people or entities involved?",
   "What patterns or trends do you see?",
 ];
+
+const TYPE_SUGGESTIONS: Record<string, string[]> = {
+  gmail:            ["What emails need urgent attention?", "Summarise my inbox by sender", "Find emails about payments or invoices"],
+  outlook:          ["What emails need urgent attention?", "Summarise my inbox by sender", "What meetings are scheduled?"],
+  slack:            ["What are the main discussion topics?", "Any blockers or issues mentioned?", "Who is most active?"],
+  notion:           ["Summarise this database", "What tasks are overdue?", "Extract all action items"],
+  airtable:         ["Show me a summary of all records", "What fields have the most missing data?", "Find duplicate entries"],
+  github:           ["What PRs are open and by whom?", "Any recurring bugs or issues?", "Summarise recent commits"],
+  jira:             ["What tickets are unresolved?", "Show sprint progress", "Any blockers this week?"],
+  linear:           ["What issues are in progress?", "Any high-priority bugs?", "Show velocity by team member"],
+  stripe:           ["Revenue this month vs last month", "Who are my top customers?", "Any failed payments?"],
+  shopify:          ["Top selling products", "Any abandoned carts?", "Revenue by region"],
+  hubspot:          ["How many leads this week?", "What's the conversion rate?", "Top deals in pipeline"],
+  salesforce:       ["Show open opportunities", "Accounts with no activity", "Revenue forecast"],
+  postgresql:       ["How many rows in this table?", "Find duplicate records", "Show column summary statistics"],
+  mysql:            ["How many rows in this table?", "Find duplicate records", "Show column summary statistics"],
+  mongodb:          ["Summarise the document structure", "Find documents with missing fields", "Count by category"],
+  snowflake:        ["Query the largest tables", "Data quality summary", "Row counts by schema"],
+  bigquery:         ["Summarise this dataset", "Find null values", "Show row count by table"],
+  databricks:       ["Summarise the lakehouse schema", "Find data quality issues", "Show recent query patterns"],
+  "google-sheets":  ["Summarise the spreadsheet", "Find empty cells or errors", "What trends do you see?"],
+  "google-analytics": ["Top pages by traffic", "Bounce rate trends", "Traffic source breakdown"],
+  "local-file":     ["Summarise this file", "What are the key data points?", "Extract all tables or lists"],
+};
+
+function getSuggestions(sourceTypes: string[]): string[] {
+  const specific: string[] = [];
+  for (const t of sourceTypes) {
+    if (TYPE_SUGGESTIONS[t]) specific.push(...TYPE_SUGGESTIONS[t].slice(0, 2));
+  }
+  const combined = [...new Set([...specific, ...BASE_SUGGESTIONS])];
+  return combined.slice(0, 6);
+}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -62,6 +95,16 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
   );
 }
 
+function downloadBlob(content: string, filename: string, mime = "text/markdown") {
+  const blob = new Blob([content], { type: mime });
+  const a = Object.assign(document.createElement("a"), {
+    href: URL.createObjectURL(blob),
+    download: filename,
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 function exportMarkdown(result: any) {
   const lines = [
     "# Dedomena Analysis\n",
@@ -78,13 +121,23 @@ function exportMarkdown(result: any) {
       lines.push("");
     });
   }
-  const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
-  const a = Object.assign(document.createElement("a"), {
-    href: URL.createObjectURL(blob),
-    download: `dedomena-${Date.now()}.md`,
+  downloadBlob(lines.join("\n"), `dedomena-analysis-${Date.now()}.md`);
+}
+
+function exportChat(messages: Message[]) {
+  const lines = [
+    "# Dedomena Chat Export\n",
+    `> Exported ${new Date().toLocaleString()}\n`,
+  ];
+  messages.forEach(m => {
+    lines.push(`\n## ${m.role === "user" ? "You" : "Assistant"}\n`);
+    lines.push(m.content);
+    if (m.hits?.length) {
+      lines.push("\n**Sources:**");
+      m.hits.forEach((h: any) => lines.push(`- **${h.sourceName}**: ${h.excerpt ?? ""}`));
+    }
   });
-  a.click();
-  URL.revokeObjectURL(a.href);
+  downloadBlob(lines.join("\n"), `dedomena-chat-${Date.now()}.md`);
 }
 
 // ── Main view ─────────────────────────────────────────────────────────────────
@@ -99,6 +152,7 @@ export function IntelligenceView() {
   const [showHistory, setShowHistory] = useState(false);
 
   const sources = useAppStore(s => s.sources);
+  const suggestions = getSuggestions(sources.map(s => s.type));
   const settings = useAppStore(s => s.settings);
   const queryHistory = useAppStore(s => s.queryHistory);
   const addQueryRecord = useAppStore(s => s.addQueryRecord);
@@ -428,7 +482,7 @@ export function IntelligenceView() {
                 <motion.div {...fadeUp} className="space-y-3 mt-2">
                   <p className="text-[10px] uppercase tracking-widest text-white/25 font-bold">Suggested queries</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {SUGGESTED_QUERIES.map((q, i) => (
+                    {suggestions.map((q, i) => (
                       <button type="button" key={i} onClick={() => execute(q)}
                         className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/15 transition-all text-left group">
                         <ChevronRight size={11} className="text-white/20 group-hover:text-quartz-500 shrink-0 transition-colors" />
@@ -607,7 +661,7 @@ export function IntelligenceView() {
                       <div className="space-y-3">
                         <p className="text-[10px] uppercase tracking-widest text-white/25 font-bold">More suggestions</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {SUGGESTED_QUERIES.map((q, i) => (
+                          {suggestions.map((q, i) => (
                             <button type="button" key={i} onClick={() => execute(q)}
                               className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/15 transition-all text-left group">
                               <ChevronRight size={11} className="text-white/20 group-hover:text-quartz-500 shrink-0 transition-colors" />
@@ -655,10 +709,17 @@ export function IntelligenceView() {
             </div>
           </GlassCard>
           {mode === "chat" && messages.length > 0 && (
-            <button type="button" onClick={() => setMessages([])}
-              className="mt-2 text-[11px] text-white/25 hover:text-white/50 transition-colors w-full text-center">
-              Clear conversation
-            </button>
+            <div className="mt-2 flex items-center justify-center gap-4">
+              <button type="button" onClick={() => exportChat(messages)}
+                className="text-[11px] text-white/25 hover:text-[#18bfff] transition-colors flex items-center gap-1">
+                <Download size={11} /> Export chat
+              </button>
+              <span className="text-white/10">·</span>
+              <button type="button" onClick={() => setMessages([])}
+                className="text-[11px] text-white/25 hover:text-white/50 transition-colors">
+                Clear conversation
+              </button>
+            </div>
           )}
         </div>
       </div>

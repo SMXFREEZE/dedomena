@@ -4,33 +4,56 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, ContentStorage } from "@/store";
 import { CONNECTORS_BY_ID } from "@/lib/connectors/registry";
-import { Database, Plus, Settings, Blocks, Sparkles, Network, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { CredentialStorage } from "@/store/credential-store";
+import { runClientFetcher } from "@/lib/connectors/fetchers";
+import { Database, Plus, Settings, Blocks, Sparkles, Network, Trash2, ChevronDown, ChevronRight, RefreshCw, AlertCircle } from "lucide-react";
 import { ConnectorIcon } from "@/components/ui/connector-icon";
 import { cn, fmtChars } from "@/lib/utils";
 import { toast } from "sonner";
+
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const m  = Math.floor(ms / 60_000);
+  const h  = Math.floor(m / 60);
+  const d  = Math.floor(h / 24);
+  if (d > 0)  return `${d}d ago`;
+  if (h > 0)  return `${h}h ago`;
+  if (m > 0)  return `${m}m ago`;
+  return "just now";
+}
+
+function freshnessColor(iso?: string): string {
+  if (!iso) return "text-white/20";
+  const h = (Date.now() - new Date(iso).getTime()) / 3_600_000;
+  if (h < 1)  return "text-emerald-400";
+  if (h < 24) return "text-amber-400";
+  return "text-red-400/70";
+}
 
 export function Sidebar({
   onAddSource,
   onOpenSettings,
   activeTab,
-  setActiveTab
+  setActiveTab,
 }: {
   onAddSource: () => void;
   onOpenSettings: () => void;
   activeTab: string;
   setActiveTab: (v: string) => void;
 }) {
-  const sources = useAppStore(s => s.sources);
-  const removeSource = useAppStore(s => s.removeSource);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const sources         = useAppStore(s => s.sources);
+  const removeSource    = useAppStore(s => s.removeSource);
+  const updateSourceMeta = useAppStore(s => s.updateSourceMeta);
+  const [hoveredId, setHoveredId]   = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<string | null>(null);
 
   const totalChars = sources.reduce((acc, s) => acc + (s.charCount || 0), 0);
 
   const navItems = [
-    { id: "intelligence", icon: Sparkles, label: "Intelligence", desc: "Search & synthesis" },
-    { id: "engineer", icon: Network, label: "Data Engineer", desc: "Clean & normalize" },
-    { id: "analyst", icon: Blocks, label: "Analyst", desc: "Charts & insights" },
+    { id: "intelligence", icon: Sparkles, label: "Intelligence",  desc: "Search & synthesis" },
+    { id: "engineer",     icon: Network,  label: "Data Engineer", desc: "Clean & normalize" },
+    { id: "analyst",      icon: Blocks,   label: "Analyst",       desc: "Charts & insights" },
   ];
 
   const handleDelete = (id: string, name: string, e: React.MouseEvent) => {
@@ -46,6 +69,51 @@ export function Sidebar({
     toast.success("All sources cleared");
   };
 
+  const handleRefresh = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const src = sources.find(s => s.id === id);
+    if (!src) return;
+
+    const creds = CredentialStorage.get(id);
+    if (!creds) {
+      toast.error("No credentials saved for this source. Re-connect it to refresh.");
+      return;
+    }
+
+    setRefreshing(id);
+    const toastId = toast.loading(`Refreshing ${src.name}…`);
+    try {
+      let content: string;
+      const connector = CONNECTORS_BY_ID[src.type];
+
+      if (connector?.executionMode === "server") {
+        const res = await fetch("/api/connector/db", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ connectorId: src.type, credentials: creds }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Refresh failed");
+        content = data.content;
+      } else {
+        content = await runClientFetcher(src.type, creds);
+      }
+
+      ContentStorage.save(id, content);
+      updateSourceMeta(id, {
+        charCount: content.length,
+        lastRefreshed: new Date().toISOString(),
+        status: "connected",
+      });
+      toast.success(`${src.name} refreshed`, { id: toastId });
+    } catch (err: any) {
+      updateSourceMeta(id, { status: "error" });
+      toast.error(`Refresh failed: ${err.message}`, { id: toastId });
+    } finally {
+      setRefreshing(null);
+    }
+  };
+
   return (
     <aside className="w-72 h-full flex flex-col shrink-0 border-r border-white/5 bg-[#08080a]/50 backdrop-blur-xl z-20">
       {/* Brand */}
@@ -55,9 +123,7 @@ export function Sidebar({
             <h1 className="text-[1.35rem] font-semibold tracking-wide text-white/90 leading-none">
               dedomena
             </h1>
-            <span className="brand-sigma text-[2rem] text-white/35 leading-none select-none">
-              Σ
-            </span>
+            <span className="brand-sigma text-[2rem] text-white/35 leading-none select-none">Σ</span>
           </div>
         </div>
         <button
@@ -86,11 +152,16 @@ export function Sidebar({
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors",
-                isActive ? "bg-gradient-to-br from-quartz-500/20 to-coral-500/20 text-coral-500" : "bg-white/5 text-white/40 group-hover:text-white/60"
+                isActive
+                  ? "bg-gradient-to-br from-quartz-500/20 to-coral-500/20 text-coral-500"
+                  : "bg-white/5 text-white/40 group-hover:text-white/60"
               )}>
                 <item.icon size={15} />
               </div>
-              <div className={cn("text-xs font-semibold tracking-tight transition-colors", isActive ? "text-white" : "text-white/60 group-hover:text-white")}>
+              <div className={cn(
+                "text-xs font-semibold tracking-tight transition-colors",
+                isActive ? "text-white" : "text-white/60 group-hover:text-white"
+              )}>
                 {item.label}
               </div>
             </button>
@@ -116,9 +187,7 @@ export function Sidebar({
           )}
         </div>
         {sources.length > 0 && (
-          <p className="text-[9px] text-white/20 font-mono">
-            {fmtChars(totalChars)} total
-          </p>
+          <p className="text-[9px] text-white/20 font-mono">{fmtChars(totalChars)} total</p>
         )}
       </div>
 
@@ -132,10 +201,12 @@ export function Sidebar({
         ) : (
           <AnimatePresence initial={false}>
             {sources.map((src, i) => {
-              const connector = CONNECTORS_BY_ID[src.type];
+              const connector  = CONNECTORS_BY_ID[src.type];
               const isExpanded = expandedId === src.id;
-              const isHovered = hoveredId === src.id;
-              const preview = isExpanded ? ContentStorage.get(src.id)?.slice(0, 200) : null;
+              const isHovered  = hoveredId === src.id;
+              const isRefresh  = refreshing === src.id;
+              const preview    = isExpanded ? ContentStorage.get(src.id)?.slice(0, 200) : null;
+              const hasError   = src.status === "error";
 
               return (
                 <motion.div
@@ -144,7 +215,10 @@ export function Sidebar({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10, height: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors overflow-hidden"
+                  className={cn(
+                    "rounded-xl border bg-white/[0.02] hover:bg-white/[0.04] transition-colors overflow-hidden",
+                    hasError ? "border-red-400/20" : "border-white/5"
+                  )}
                   onMouseEnter={() => setHoveredId(src.id)}
                   onMouseLeave={() => setHoveredId(null)}
                 >
@@ -158,7 +232,7 @@ export function Sidebar({
                       <ConnectorIcon
                         iconSlug={connector?.iconSlug}
                         name={connector?.name ?? src.type}
-                        color={connector?.color ?? '#888888'}
+                        color={connector?.color ?? "#888888"}
                         size={18}
                         className="shrink-0"
                       />
@@ -168,26 +242,45 @@ export function Sidebar({
                           <span className="text-[9px] text-white/25 font-mono shrink-0">{fmtChars(src.charCount)}</span>
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", src.status === "connected" ? "bg-emerald-500" : "bg-amber-500")} />
-                          <span className="text-[9px] text-white/25 tracking-wider uppercase truncate">{src.type}</span>
+                          {hasError
+                            ? <AlertCircle size={9} className="text-red-400 shrink-0" />
+                            : <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", isRefresh ? "bg-amber-400 animate-pulse" : "bg-emerald-500")} />
+                          }
+                          <span className={cn("text-[9px] tracking-wider font-mono shrink-0", freshnessColor(src.lastRefreshed ?? src.dateAdded))}>
+                            {timeAgo(src.lastRefreshed ?? src.dateAdded)}
+                          </span>
+                          <span className="text-[9px] text-white/20 truncate">· {src.type}</span>
                         </div>
                       </div>
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-1 shrink-0">
+                      {/* Actions — visible on hover */}
+                      <div className="flex items-center gap-0.5 shrink-0">
                         {(isHovered || isExpanded) && (
-                          <motion.button
-                            type="button"
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            onClick={(e) => handleDelete(src.id, src.name, e)}
-                            className="p-1 rounded text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all"
-                            title="Remove source"
-                          >
-                            <Trash2 size={12} />
-                          </motion.button>
+                          <>
+                            <motion.button
+                              type="button"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              onClick={(e) => handleRefresh(src.id, e)}
+                              disabled={isRefresh}
+                              className="p-1 rounded text-white/20 hover:text-[#18bfff] hover:bg-[#18bfff]/10 transition-all disabled:opacity-40"
+                              title="Refresh data"
+                            >
+                              <RefreshCw size={11} className={isRefresh ? "animate-spin" : ""} />
+                            </motion.button>
+                            <motion.button
+                              type="button"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              onClick={(e) => handleDelete(src.id, src.name, e)}
+                              className="p-1 rounded text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                              title="Remove source"
+                            >
+                              <Trash2 size={11} />
+                            </motion.button>
+                          </>
                         )}
-                        <span className="text-white/20">
+                        <span className="text-white/20 ml-0.5">
                           {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                         </span>
                       </div>
@@ -209,12 +302,22 @@ export function Sidebar({
                             <span>Added {new Date(src.dateAdded).toLocaleDateString()}</span>
                             {src.contentType && <span>{src.contentType}</span>}
                           </div>
+                          {src.lastRefreshed && (
+                            <p className="text-[9px] text-white/20">
+                              Last refreshed: {new Date(src.lastRefreshed).toLocaleString()}
+                            </p>
+                          )}
                           {preview ? (
                             <p className="text-[10px] text-white/35 leading-relaxed font-mono bg-white/[0.02] rounded-lg p-2 max-h-20 overflow-hidden">
                               {preview}{preview.length >= 200 ? "…" : ""}
                             </p>
                           ) : (
                             <p className="text-[10px] text-white/20 italic">No preview available</p>
+                          )}
+                          {hasError && (
+                            <p className="text-[10px] text-red-400/70">
+                              Last refresh failed. Click the refresh icon to retry.
+                            </p>
                           )}
                         </div>
                       </motion.div>

@@ -13,6 +13,7 @@ export interface DataSourceMeta {
   status: "connected" | "loading" | "error";
   charCount: number;
   dateAdded: string;
+  lastRefreshed?: string;
   summary?: string;
 }
 
@@ -38,6 +39,7 @@ interface AppState {
   queryHistory: QueryRecord[];
 
   addSourceMeta: (meta: Omit<DataSourceMeta, "id" | "dateAdded" | "status"> & { id?: string }) => void;
+  updateSourceMeta: (id: string, patch: Partial<DataSourceMeta>) => void;
   removeSource: (id: string, storageDelete: (id: string) => void) => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
   addQueryRecord: (record: Omit<QueryRecord, "id">) => void;
@@ -62,6 +64,10 @@ export const useAppStore = create<AppState>()(
           ...state.sources,
           { ...meta, id: meta.id ?? genId(), dateAdded: new Date().toISOString(), status: "connected" },
         ],
+      })),
+
+      updateSourceMeta: (id, patch) => set((state) => ({
+        sources: state.sources.map(s => s.id === id ? { ...s, ...patch } : s),
       })),
 
       removeSource: (id, storageDelete) => set((state) => {
