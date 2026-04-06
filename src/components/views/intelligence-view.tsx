@@ -265,14 +265,19 @@ export function IntelligenceView() {
               const data = await res.json();
               const snippets: any[] = data.snippets ?? [];
               const keywords: string[] = data.keywords ?? [];
+              const folders: string[]  = data.foldersExplored ?? [];
               let content: string;
               if (snippets.length > 0) {
-                content = `Keywords searched: [${keywords.join(', ')}]\nFiles found: ${snippets.length}\n\n` +
+                const header = [
+                  `Keywords: [${keywords.join(', ')}]`,
+                  folders.length ? `Folders explored: ${folders.join(', ')}` : null,
+                  `Files found: ${snippets.length}`,
+                ].filter(Boolean).join(' | ');
+                content = header + '\n\n' +
                   snippets.map((s: any) => `📄 ${s.name}\n📁 ${s.dir}\n${s.excerpt}`).join('\n\n---\n\n');
               } else {
-                content = `Keywords searched: [${keywords.join(', ')}]\n` +
-                  `No matching files found. The bridge searched ${rootPath || 'home directory'} but found nothing matching these keywords.\n` +
-                  `Suggestion: Try asking with specific file/folder names if you know them.`;
+                content = `Keywords: [${keywords.join(', ')}] | No matching files found in ${rootPath || 'home directory'}.\n` +
+                  `Tip: Try using specific file or folder names. For example: "outline maisonneuve" or "CEGEP syllabus".`;
               }
               bridgeSourcesData.push({ ...src, content: `=== Desktop Bridge: ${src.name} ===\n${content}` });
             } else {
