@@ -257,6 +257,13 @@ export const CONNECTORS: Connector[] = [
     fields: [],
   },
   {
+    id: 'screen-capture', name: 'Screen Capture', color: '#a78bfa',
+    category: 'storage', executionMode: 'client', popular: true,
+    description: 'Share your screen or any window — Claude will see and analyze it.',
+    tags: ['screen', 'screenshot', 'desktop', 'capture', 'window'],
+    fields: [],
+  },
+  {
     id: 'google-drive', name: 'Google Drive', iconSlug: 'googledrive', color: '#4285f4',
     category: 'storage', executionMode: 'client', popular: true,
     description: 'Docs, Sheets, and files from Google Drive.',

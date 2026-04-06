@@ -16,13 +16,24 @@ export function AddSourceModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
 
   if (!isOpen) return null;
 
-  const handleAdd = ({ name, type, content, contentType }: { name: string; type: string; content: string; contentType?: any }) => {
+  type AddPayload = { name: string; type: string; content: string; contentType?: any };
+
+  const addSource = ({ name, type, content, contentType }: AddPayload) => {
     const id = Math.random().toString(36).slice(2, 11);
     ContentStorage.save(id, content);
     addSourceMeta({ id, name: name || 'Unnamed Source', type, contentType, charCount: content?.length ?? 0 });
-    toast.success(`Connected: ${name}`);
+  };
+
+  const handleAdd = (data: AddPayload) => {
+    addSource(data);
+    toast.success(`Connected: ${data.name}`);
     setSelected(null);
     onClose();
+  };
+
+  // Used by LocalFileForm for batch imports — adds source without closing the modal
+  const handleAddSilent = (data: AddPayload) => {
+    addSource(data);
   };
 
   const handleClose = () => {
@@ -90,6 +101,7 @@ export function AddSourceModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
                 <ConnectorForm
                   connector={selected}
                   onAdd={handleAdd}
+                  onAddSilent={handleAddSilent}
                   onBack={() => setSelected(null)}
                 />
               </motion.div>

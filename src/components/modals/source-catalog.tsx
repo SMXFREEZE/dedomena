@@ -25,6 +25,10 @@ export function SourceCatalog({ onSelect }: SourceCatalogProps) {
         (c.tags ?? []).some(t => t.includes(q));
       return matchCat && matchQ;
     }).sort((a, b) => {
+      if (a.id === 'local-file') return -1;
+      if (b.id === 'local-file') return 1;
+      if (a.id === 'screen-capture') return -1;
+      if (b.id === 'screen-capture') return 1;
       if (a.popular && !b.popular) return -1;
       if (!a.popular && b.popular) return 1;
       return a.name.localeCompare(b.name);
