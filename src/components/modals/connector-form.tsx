@@ -37,6 +37,10 @@ export function ConnectorForm({ connector, onAdd, onAddSilent, onBack }: Connect
     return <DesktopConnectForm onAdd={onAdd} onAddSilent={onAddSilent} onBack={onBack} />;
   }
 
+  if (connector.id === 'desktop-bridge') {
+    return <DesktopBridgeForm name={name} setName={setName} onAdd={onAdd} onBack={onBack} />;
+  }
+
   // ── Paste text ────────────────────────────────────────────────────────────
   if (connector.id === 'paste') {
     return (
@@ -549,6 +553,140 @@ function DesktopConnectForm({ onAdd, onAddSilent, onBack }: any) {
         <Button variant="ghost" onClick={onBack} disabled={isLoading}>Back</Button>
         {(status === 'idle' || status === 'error') && (
           <Button onClick={connect}>Connect Folder</Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Desktop Bridge form ────────────────────────────────────────────────────────
+const BRIDGE_PORT = 7432;
+
+function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
+  const [status, setStatus]     = useState<'idle' | 'testing' | 'ok' | 'error'>('idle');
+  const [rootPath, setRootPath] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const testConnection = async () => {
+    setStatus('testing');
+    setErrorMsg('');
+    try {
+      const res = await fetch(`http://127.0.0.1:${BRIDGE_PORT}/status`, { signal: AbortSignal.timeout(3000) });
+      if (!res.ok) throw new Error(`Bridge returned ${res.status}`);
+      const data = await res.json();
+      setRootPath(data.rootPath ?? '');
+      setStatus('ok');
+    } catch (e: any) {
+      setErrorMsg('Could not reach the bridge. Make sure the terminal is still running.');
+      setStatus('error');
+    }
+  };
+
+  const handleConnect = () => {
+    // Store rootPath as the content so intelligence-view can retrieve it
+    const meta = JSON.stringify({ __bridge__: true, rootPath });
+    onAdd({
+      name: name || `Local Bridge (${rootPath.split(/[/\\]/).pop() ?? 'Home'})`,
+      type: 'desktop-bridge',
+      content: meta,
+    });
+  };
+
+  const command = `node dedomena-bridge.js`;
+
+  return (
+    <div className="space-y-4">
+      <Input
+        label="Source Name (optional)"
+        value={name}
+        onChange={(e: any) => setName(e.target.value)}
+        placeholder="My Desktop"
+      />
+
+      {/* Step 1 — Download & run */}
+      <div className="rounded-xl border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.02)] p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="w-5 h-5 rounded-full bg-[#34d399]/15 border border-[#34d399]/30 text-[#34d399] text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+          <p className="text-[12px] text-white/70 font-medium">Download the bridge script</p>
+        </div>
+        <a
+          href="/dedomena-bridge.js"
+          download="dedomena-bridge.js"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(52,211,153,0.08)] border border-[rgba(52,211,153,0.2)] text-[#34d399] text-[12px] font-medium hover:bg-[rgba(52,211,153,0.14)] transition-colors"
+        >
+          ↓ dedomena-bridge.js
+        </a>
+      </div>
+
+      {/* Step 2 — Run in terminal */}
+      <div className="rounded-xl border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.02)] p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="w-5 h-5 rounded-full bg-[#34d399]/15 border border-[#34d399]/30 text-[#34d399] text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+          <p className="text-[12px] text-white/70 font-medium">Open a terminal and run it</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 block bg-black/40 border border-[rgba(255,255,255,0.08)] rounded-lg px-3 py-2 text-[11px] font-mono text-[#34d399]/90 select-all">
+            {command}
+          </code>
+          <button
+            type="button"
+            onClick={() => navigator.clipboard.writeText(command)}
+            className="shrink-0 px-2 py-2 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-white/40 hover:text-white/70 text-[10px] transition-colors"
+            title="Copy command"
+          >
+            copy
+          </button>
+        </div>
+        <p className="text-[10px] text-white/30 leading-relaxed">
+          Optionally pass a folder path: <code className="text-white/40">node dedomena-bridge.js ~/Documents</code>
+          <br />Node.js required — <span className="text-white/20">no install, no account, runs 100% locally.</span>
+        </p>
+      </div>
+
+      {/* Step 3 — Test */}
+      <div className="rounded-xl border border-[rgba(255,255,255,0.07)] bg-[rgba(255,255,255,0.02)] p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="w-5 h-5 rounded-full bg-[#34d399]/15 border border-[#34d399]/30 text-[#34d399] text-[10px] font-bold flex items-center justify-center shrink-0">3</span>
+          <p className="text-[12px] text-white/70 font-medium">Test the connection</p>
+        </div>
+
+        {status === 'ok' && (
+          <div className="flex items-center gap-2 text-emerald-400 text-[11px]">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Bridge is live — root: <code className="font-mono text-white/50 text-[10px]">{rootPath}</code>
+          </div>
+        )}
+        {status === 'error' && (
+          <p className="text-[11px] text-red-400/80">{errorMsg}</p>
+        )}
+
+        <Button
+          variant={status === 'ok' ? 'ghost' : 'glass'}
+          onClick={testConnection}
+          disabled={status === 'testing'}
+          className="w-full"
+        >
+          {status === 'testing' ? (
+            <><RefreshCw size={13} className="animate-spin" /> Testing…</>
+          ) : status === 'ok' ? (
+            '✓ Connected — retest'
+          ) : (
+            'Test Connection'
+          )}
+        </Button>
+      </div>
+
+      {/* Privacy note */}
+      <p className="text-[10px] text-white/20 leading-relaxed px-1">
+        The bridge runs only on your machine. When you ask a question, dedomena searches
+        your files <em>on the fly</em> and sends only the relevant excerpts to the AI —
+        nothing is uploaded or stored.
+      </p>
+
+      <div className="flex gap-3 justify-end pt-1">
+        <Button variant="ghost" onClick={onBack}>Back</Button>
+        {status === 'ok' && (
+          <Button onClick={handleConnect}>Connect Bridge</Button>
         )}
       </div>
     </div>

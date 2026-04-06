@@ -238,10 +238,45 @@ export function IntelligenceView() {
     });
 
     try {
-      const sourcesData = activeSources.map(s => ({
-        ...s,
-        content: ContentStorage.get(s.id),
-      }));
+      // ── Bridge sources: query on-demand, only return relevant excerpts ──────
+      const bridgeSources  = activeSources.filter(s => s.type === 'desktop-bridge');
+      const regularSources = activeSources.filter(s => s.type !== 'desktop-bridge');
+
+      let bridgeSourcesData: any[] = [];
+      if (bridgeSources.length > 0) {
+        for (const src of bridgeSources) {
+          let rootPath = '';
+          try {
+            const stored = ContentStorage.get(src.id) ?? '{}';
+            rootPath = JSON.parse(stored).rootPath ?? '';
+          } catch { /* ignore */ }
+
+          try {
+            const res = await fetch('http://127.0.0.1:7432/search', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: q, rootPath }),
+              signal: AbortSignal.timeout(8000),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const content = (data.snippets as any[])
+                .map((s: any) => `[${s.name}  —  ${s.dir}]\n${s.excerpt}`)
+                .join('\n\n---\n\n');
+              if (content.trim()) {
+                bridgeSourcesData.push({ ...src, content: `Local filesystem search results for "${q}":\n\n${content}` });
+              }
+            }
+          } catch {
+            toast.error('Desktop Bridge is not running. Start it in your terminal.');
+          }
+        }
+      }
+
+      const sourcesData = [
+        ...regularSources.map(s => ({ ...s, content: ContentStorage.get(s.id) })),
+        ...bridgeSourcesData,
+      ];
 
       const selectedSourceIds = selectedIds.size > 0 ? [...selectedIds] : undefined;
 
