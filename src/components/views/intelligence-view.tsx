@@ -338,38 +338,44 @@ export function IntelligenceView() {
         <div className="max-w-4xl mx-auto">
           <motion.div {...fadeUp} className="flex items-center justify-between mb-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/50 mb-3 font-mono tracking-widest uppercase">
-                <Sparkles size={12} className="text-quartz-500" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.07)] text-[11px] text-white/40 mb-4 tracking-[0.12em] uppercase">
+                <Sparkles size={11} className="text-[#9370ff]" />
                 <span>Neural Synthesis Engine</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter leading-tight">
+              <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.04em] leading-[1.05]">
                 Ask anything about<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white/40 to-white/10">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white/35 to-white/10">
                   your connected data.
                 </span>
               </h2>
             </div>
 
             <div className="flex flex-col items-end gap-2">
-              {/* Mode toggle */}
-              <div className="flex items-center gap-1 p-1 bg-white/5 rounded-xl border border-white/10">
-                <button type="button" onClick={() => setMode("structured")}
-                  className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
-                    mode === "structured" ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
-                  )}>
-                  <BarChart2 size={12} /> Structured
-                </button>
-                <button type="button" onClick={() => { setMode("chat"); setStructuredResult(null); }}
-                  className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
-                    mode === "chat" ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"
-                  )}>
-                  <MessageSquare size={12} /> Chat
-                </button>
+              {/* Mode toggle — Linear luminance-stepped active state */}
+              <div className="flex items-center gap-0.5 p-1 bg-[rgba(255,255,255,0.03)] rounded-lg border border-[rgba(255,255,255,0.07)]">
+                {([
+                  { id: "structured", icon: BarChart2, label: "Structured" },
+                  { id: "chat",       icon: MessageSquare, label: "Chat" },
+                ] as const).map(({ id, icon: Icon, label }) => (
+                  <button key={id} type="button"
+                    onClick={() => { setMode(id); if (id === "chat") setStructuredResult(null); }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all duration-150",
+                      mode === id
+                        ? "bg-[rgba(255,255,255,0.08)] text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                        : "text-white/35 hover:text-white/65"
+                    )}>
+                    <Icon size={11} /> {label}
+                  </button>
+                ))}
               </div>
               {/* History toggle */}
               <button type="button" onClick={() => setShowHistory(v => !v)}
-                className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] transition-all",
-                  showHistory ? "bg-white/10 text-white/70" : "text-white/30 hover:text-white/60"
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] transition-all",
+                  showHistory
+                    ? "bg-[rgba(255,255,255,0.06)] text-white/60 border border-[rgba(255,255,255,0.08)]"
+                    : "text-white/25 hover:text-white/55 border border-transparent"
                 )}>
                 <History size={11} />
                 History {queryHistory.length > 0 && `(${queryHistory.length})`}
@@ -390,19 +396,20 @@ export function IntelligenceView() {
                       key={src.id}
                       onClick={() => toggleSource(src.id)}
                       className={cn(
-                        "flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] transition-all",
+                        // Linear pill chip style
+                        "flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] transition-all duration-150",
                         isActive
-                          ? "border-white/15 bg-white/5 text-white/70"
-                          : "border-white/5 bg-transparent text-white/20 hover:text-white/40"
+                          ? "border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.06)] text-white/75 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                          : "border-[rgba(255,255,255,0.05)] bg-transparent text-white/25 hover:text-white/50 hover:border-[rgba(255,255,255,0.09)]"
                       )}
                     >
                       <ConnectorIcon
                         iconSlug={connector?.iconSlug}
                         name={connector?.name ?? src.type}
-                        color={isActive ? (connector?.color ?? "#888") : "#444"}
-                        size={13}
+                        color={isActive ? (connector?.color ?? "#888") : "#555"}
+                        size={12}
                       />
-                      <span className="truncate max-w-[100px]">{src.name}</span>
+                      <span className="truncate max-w-[90px] tracking-[-0.01em]">{src.name}</span>
                     </button>
                   );
                 })}
@@ -480,13 +487,18 @@ export function IntelligenceView() {
             <div className="space-y-4">
               {messages.length === 0 && !loading && (
                 <motion.div {...fadeUp} className="space-y-3 mt-2">
-                  <p className="text-[10px] uppercase tracking-widest text-white/25 font-bold">Suggested queries</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <p className="text-[10px] uppercase tracking-[0.12em] text-white/20 font-semibold">Suggested queries</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                     {suggestions.map((q, i) => (
                       <button type="button" key={i} onClick={() => execute(q)}
-                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/15 transition-all text-left group">
-                        <ChevronRight size={11} className="text-white/20 group-hover:text-quartz-500 shrink-0 transition-colors" />
-                        <span className="text-xs text-white/50 group-hover:text-white/80 transition-colors">{q}</span>
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left group transition-all duration-150",
+                          "bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]",
+                          "hover:bg-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.11)]",
+                          "hover:shadow-[0_0_0_1px_rgba(18,20,24,0.9),inset_0_1px_0_0_rgba(255,255,255,0.05)]"
+                        )}>
+                        <ChevronRight size={10} className="text-white/15 group-hover:text-[#9370ff]/70 shrink-0 transition-colors" />
+                        <span className="text-[12px] text-white/45 group-hover:text-white/80 transition-colors tracking-[-0.01em] leading-snug">{q}</span>
                       </button>
                     ))}
                   </div>
@@ -498,23 +510,32 @@ export function IntelligenceView() {
                   <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                     className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
                     {msg.role === "user" ? (
-                      <div className="max-w-[75%] bg-white/10 border border-white/10 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-white/90">
+                      // User bubble — Raycast card style with inset top highlight
+                      <div className={cn(
+                        "max-w-[75%] px-4 py-3 text-[13px] text-white/90 leading-relaxed rounded-2xl rounded-tr-sm",
+                        "bg-[rgba(255,255,255,0.07)] border border-[rgba(255,255,255,0.1)]",
+                        "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]"
+                      )}>
                         {msg.content}
                       </div>
                     ) : (
                       <div className="max-w-[90%] space-y-3">
-                        <GlassCard className="bg-quartz-500/5 border-quartz-500/20">
+                        {/* Assistant bubble — Linear card with violet accent */}
+                        <GlassCard className={cn(
+                          "bg-[rgba(147,112,255,0.04)] border-[rgba(147,112,255,0.15)]",
+                          "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                        )}>
                           <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2 text-quartz-500">
-                              <Sparkles size={13} />
-                              <span className="text-xs font-semibold tracking-widest uppercase">Analysis</span>
+                            <div className="flex items-center gap-2 text-[#9370ff]/80">
+                              <Sparkles size={12} />
+                              <span className="text-[11px] font-semibold tracking-[0.1em] uppercase">Analysis</span>
                               {msg.streaming && (
-                                <div className="w-1.5 h-4 bg-quartz-500/60 rounded-sm animate-pulse ml-1" />
+                                <div className="w-1 h-3.5 bg-[#9370ff]/50 rounded-sm animate-pulse ml-1" />
                               )}
                             </div>
                             {!msg.streaming && <CopyButton text={msg.content} />}
                           </div>
-                          <p className="text-sm text-white/85 leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-[13px] text-white/80 leading-relaxed whitespace-pre-wrap tracking-[-0.01em]">{msg.content}</p>
                         </GlassCard>
                         {!msg.streaming && msg.hits && msg.hits.length > 0 && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -104,30 +104,37 @@ function ConnectorCard({ connector, onClick }: { connector: Connector; onClick: 
     <button
       type="button"
       onClick={onClick}
-      className="flex items-start gap-3 p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/15 transition-all text-left group"
+      className={cn(
+        "flex items-start gap-3 p-3 rounded-xl text-left group transition-all duration-150",
+        // Linear surface-1 at rest
+        "bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.06)]",
+        // Raycast double-ring on hover: outer ring + subtle background lift
+        "hover:bg-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.12)]",
+        "hover:shadow-[0_0_0_1px_rgba(18,20,24,0.9),inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+      )}
     >
       {/* Icon */}
       <div
-        className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
-        style={{ backgroundColor: `${connector.color}18` }}
+        className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-150 group-hover:scale-105"
+        style={{ backgroundColor: `${connector.color}15` }}
       >
-        <ConnectorIcon iconSlug={connector.iconSlug} name={connector.name} color={connector.color} size={18} />
+        <ConnectorIcon iconSlug={connector.iconSlug} name={connector.name} color={connector.color} size={17} />
       </div>
 
       {/* Info */}
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-          <span className="text-xs font-semibold text-white/90 group-hover:text-white truncate leading-tight">
+          <span className="text-[12px] font-medium text-white/80 group-hover:text-white truncate leading-tight tracking-[-0.01em]">
             {connector.name}
           </span>
           {connector.popular && (
-            <span className="shrink-0 text-[9px] text-white/30 bg-white/5 px-1 py-0.5 rounded uppercase tracking-wider">
+            <span className="shrink-0 text-[8px] text-white/25 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.06)] px-1.5 py-0.5 rounded-md uppercase tracking-wider">
               popular
             </span>
           )}
         </div>
-        <p className="text-[10px] text-white/35 leading-tight line-clamp-2">{connector.description}</p>
-        <span className="text-[9px] text-white/20 uppercase tracking-wider mt-1 block">
+        <p className="text-[10px] text-white/30 leading-snug line-clamp-2">{connector.description}</p>
+        <span className="text-[8px] text-white/15 uppercase tracking-widest mt-1 block">
           {connector.executionMode === 'server' ? 'server' : 'instant'}
         </span>
       </div>

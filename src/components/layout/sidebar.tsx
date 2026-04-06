@@ -115,29 +115,27 @@ export function Sidebar({
   };
 
   return (
-    <aside className="w-72 h-full flex flex-col shrink-0 border-r border-white/5 bg-[#08080a]/50 backdrop-blur-xl z-20">
+    <aside className="w-72 h-full flex flex-col shrink-0 border-r border-[rgba(255,255,255,0.05)] bg-[#06080a]/70 backdrop-blur-2xl z-20">
       {/* Brand */}
-      <div className="p-6 flex items-center justify-between">
-        <div>
-          <div className="flex items-baseline gap-2">
-            <h1 className="text-[1.35rem] font-semibold tracking-wide text-white/90 leading-none">
-              dedomena
-            </h1>
-            <span className="brand-sigma text-[2rem] text-white/35 leading-none select-none">Σ</span>
-          </div>
+      <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-[rgba(255,255,255,0.04)]">
+        <div className="flex items-baseline gap-2">
+          <h1 className="text-[1.2rem] font-semibold tracking-[-0.03em] text-white/90 leading-none">
+            dedomena
+          </h1>
+          <span className="brand-sigma text-[1.8rem] text-white/25 leading-none select-none">Σ</span>
         </div>
         <button
           type="button"
           title="Settings"
           onClick={onOpenSettings}
-          className="p-2 rounded-lg text-white/40 hover:text-white/90 hover:bg-white/5 transition-all"
+          className="p-1.5 rounded-lg text-white/30 hover:text-white/80 hover:bg-[rgba(255,255,255,0.05)] border border-transparent hover:border-[rgba(255,255,255,0.08)] transition-all"
         >
-          <Settings size={16} />
+          <Settings size={14} />
         </button>
       </div>
 
-      {/* Navigation */}
-      <div className="px-4 py-2 space-y-1">
+      {/* Navigation — Linear luminance-stepped active states */}
+      <div className="px-3 py-3 space-y-0.5">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
@@ -146,21 +144,23 @@ export function Sidebar({
               type="button"
               onClick={() => setActiveTab(item.id)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left group",
-                isActive ? "bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]" : "hover:bg-white/5"
+                "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left group",
+                isActive
+                  ? "bg-[rgba(255,255,255,0.06)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),inset_0_-1px_0_0_rgba(0,0,0,0.15)] border border-[rgba(255,255,255,0.08)]"
+                  : "hover:bg-[rgba(255,255,255,0.03)] border border-transparent"
               )}
             >
               <div className={cn(
-                "p-1.5 rounded-lg transition-colors",
+                "w-6 h-6 rounded-md flex items-center justify-center transition-all shrink-0",
                 isActive
-                  ? "bg-gradient-to-br from-quartz-500/20 to-coral-500/20 text-coral-500"
-                  : "bg-white/5 text-white/40 group-hover:text-white/60"
+                  ? "bg-gradient-to-br from-[rgba(147,130,255,0.25)] to-[rgba(255,107,107,0.15)] text-white/90"
+                  : "bg-[rgba(255,255,255,0.04)] text-white/35 group-hover:text-white/55"
               )}>
-                <item.icon size={15} />
+                <item.icon size={13} />
               </div>
               <div className={cn(
-                "text-xs font-semibold tracking-tight transition-colors",
-                isActive ? "text-white" : "text-white/60 group-hover:text-white"
+                "text-[13px] transition-colors tracking-[-0.01em]",
+                isActive ? "text-white font-medium" : "text-white/50 group-hover:text-white/80"
               )}>
                 {item.label}
               </div>
@@ -170,24 +170,28 @@ export function Sidebar({
       </div>
 
       {/* Sources header */}
-      <div className="px-6 pt-6 pb-2">
+      <div className="px-5 pt-4 pb-2">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-[10px] uppercase tracking-widest text-white/30 font-bold flex items-center gap-2">
+          <h2 className="text-[10px] uppercase tracking-[0.1em] text-white/25 font-semibold flex items-center gap-2">
             Connected Assets
-            <span className="bg-white/10 px-1.5 py-0.5 rounded text-white/60">{sources.length}</span>
+            {sources.length > 0 && (
+              <span className="bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.08)] px-1.5 py-0.5 rounded-md text-white/50 text-[9px] font-mono">
+                {sources.length}
+              </span>
+            )}
           </h2>
           {sources.length > 0 && (
             <button
               type="button"
               onClick={handleClearAll}
-              className="text-[9px] text-white/20 hover:text-red-400/70 uppercase tracking-wider transition-colors"
+              className="text-[9px] text-white/20 hover:text-red-400/60 uppercase tracking-wider transition-colors"
             >
-              Clear all
+              clear all
             </button>
           )}
         </div>
         {sources.length > 0 && (
-          <p className="text-[9px] text-white/20 font-mono">{fmtChars(totalChars)} total</p>
+          <p className="text-[9px] text-white/20 font-mono tracking-wide">{fmtChars(totalChars)} indexed</p>
         )}
       </div>
 
@@ -216,8 +220,10 @@ export function Sidebar({
                   exit={{ opacity: 0, x: -10, height: 0 }}
                   transition={{ delay: i * 0.03 }}
                   className={cn(
-                    "rounded-xl border bg-white/[0.02] hover:bg-white/[0.04] transition-colors overflow-hidden",
-                    hasError ? "border-red-400/20" : "border-white/5"
+                    "rounded-xl border transition-all duration-150 overflow-hidden",
+                    hasError
+                      ? "bg-red-500/[0.03] border-red-400/15 hover:border-red-400/25"
+                      : "bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.04)] hover:border-[rgba(255,255,255,0.1)]"
                   )}
                   onMouseEnter={() => setHoveredId(src.id)}
                   onMouseLeave={() => setHoveredId(null)}
@@ -330,14 +336,20 @@ export function Sidebar({
         )}
       </div>
 
-      {/* Add button */}
-      <div className="p-4 border-t border-white/5 bg-black/20">
+      {/* Import CTA — Raycast-style semi-transparent white pill */}
+      <div className="p-3 border-t border-[rgba(255,255,255,0.04)]">
         <button
           type="button"
           onClick={onAddSource}
-          className="w-full flex items-center justify-center gap-2 bg-white flex-row text-black hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all rounded-xl py-2.5 text-xs font-bold"
+          className={cn(
+            "w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-all duration-150",
+            "bg-[hsla(0,0%,100%,0.9)] text-[#0d0f11] hover:bg-white",
+            "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.95),inset_0_-1px_0_0_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.35)]",
+            "hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0_4px_16px_rgba(0,0,0,0.4)]",
+            "active:scale-[0.98]"
+          )}
         >
-          <Plus size={14} /> Import Asset
+          <Plus size={14} strokeWidth={2.5} /> Import Asset
         </button>
       </div>
     </aside>

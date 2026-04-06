@@ -14,44 +14,75 @@
 }
 
 :root {
-  /* Ultra-Premium Abyss Baseline Mode */
-  --background: #030304; 
+  /* Blue-cold near-black canvas (Linear #08090a / Raycast #07080a) */
+  --background: #07090b;
   --foreground: oklch(0.95 0.01 260);
+
+  /* Surface luminance stack — elevation via opacity, never solid bg */
+  --surface-1: rgba(255, 255, 255, 0.02);   /* cards, containers */
+  --surface-2: rgba(255, 255, 255, 0.04);   /* hover */
+  --surface-3: rgba(255, 255, 255, 0.06);   /* active / selected */
+
+  /* Border scale — whisper-thin semi-transparent white */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong:  rgba(255, 255, 255, 0.12);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  /* OpenType features — Linear's geometric character (cv01=alternate a, ss03=stylistic set) */
+  font-feature-settings: 'cv01', 'ss03';
   /* Micro-Grid Pattern + Glow Overlay */
-  background-image: 
-    radial-gradient(circle at top right, rgba(144, 202, 249, 0.04) 0%, transparent 60%),
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-image:
+    radial-gradient(circle at top right, rgba(120, 180, 255, 0.04) 0%, transparent 60%),
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
   background-size: 100% 100%, 40px 40px, 40px 40px;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glass panel utilities */
+/* ── Glass panel utilities ─────────────────────────────────────────────────── */
 @utility glass {
-  background: rgba(15, 15, 18, 0.7);
+  background: rgba(11, 13, 16, 0.72);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.15);
 }
 
 @utility glass-hover {
-  background: rgba(25, 25, 30, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
+  background: rgba(18, 20, 24, 0.80);
+  border: 1px solid var(--border-default);
+  box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.2),
     0 8px 32px 0 rgba(0, 0, 0, 0.5),
-    0 0 20px 0 rgba(144, 202, 249, 0.03);
+    0 0 0 1px rgba(18, 20, 24, 0.9);
 }
 
-/* Custom Base Classes */
+/* Raycast-style button inset highlight — simulates raised glass surface */
+@utility btn-inset {
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* ── Scrollbar hide ────────────────────────────────────────────────────────── */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+/* ── Text utilities ────────────────────────────────────────────────────────── */
 @layer utilities {
   .text-gradient {
     background: linear-gradient(135deg, var(--color-quartz-500), var(--color-coral-500));
@@ -59,9 +90,26 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* Linear-style display headings: aggressive negative tracking */
+  .heading-display {
+    letter-spacing: -0.04em;
+    font-weight: 510;
+    line-height: 1.0;
+  }
+  .heading-lg {
+    letter-spacing: -0.03em;
+    font-weight: 510;
+    line-height: 1.1;
+  }
+  .heading-md {
+    letter-spacing: -0.02em;
+    font-weight: 590;
+    line-height: 1.2;
+  }
 }
 
-/* Brand logo — Greek/philosophical Sigma */
+/* ── Brand logo ────────────────────────────────────────────────────────────── */
 .brand-sigma {
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
