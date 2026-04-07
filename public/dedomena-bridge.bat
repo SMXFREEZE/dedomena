@@ -4,34 +4,43 @@ cd /d "%USERPROFILE%\Downloads"
 
 echo.
 echo  ==========================================
-echo   dedomena bridge  v3  ^|  starting...
+echo   dedomena bridge  v3
 echo  ==========================================
 echo.
 
 :: Check Node.js
 where node >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo  ERROR: Node.js is not installed.
-    echo  Download it free from https://nodejs.org (LTS version^).
+    echo  ERROR: Node.js not found.
+    echo  Install it from https://nodejs.org (click LTS^)
+    echo  then run this file again.
     echo.
     pause
     exit /b 1
 )
 
-:: Always re-download to get the latest version
-echo  Downloading latest bridge (v3^)...
-powershell -Command "Invoke-WebRequest -Uri 'https://dedomena.vercel.app/dedomena-bridge.js' -OutFile '%USERPROFILE%\Downloads\dedomena-bridge.js' -UseBasicParsing" >nul 2>&1
+:: Delete old version so we always run fresh
+if exist "%USERPROFILE%\Downloads\dedomena-bridge.js" (
+    del "%USERPROFILE%\Downloads\dedomena-bridge.js" >nul 2>&1
+)
+
+:: Download latest
+echo  Downloading bridge v3...
+powershell -Command "try { Invoke-WebRequest -Uri 'https://dedomena.vercel.app/dedomena-bridge.js' -OutFile '%USERPROFILE%\Downloads\dedomena-bridge.js' -UseBasicParsing -ErrorAction Stop; Write-Host 'OK' } catch { Write-Host 'FAIL'; exit 1 }"
 
 if not exist "%USERPROFILE%\Downloads\dedomena-bridge.js" (
-    echo  Download failed. Check your internet connection.
+    echo.
+    echo  Download failed.
+    echo  Go back to dedomena, click the JS download button
+    echo  and save it to your Downloads folder, then run this again.
+    echo.
     pause
     exit /b 1
 )
 
-echo  Ready.
 echo.
-
-:: Run
+echo  Starting bridge...
+echo.
 node "%USERPROFILE%\Downloads\dedomena-bridge.js" %*
 
 echo.

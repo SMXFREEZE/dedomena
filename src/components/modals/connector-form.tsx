@@ -562,22 +562,32 @@ function DesktopConnectForm({ onAdd, onAddSilent, onBack }: any) {
 // ── Desktop Bridge form ────────────────────────────────────────────────────────
 const BRIDGE_PORT = 7432;
 
+const REQUIRED_BRIDGE_VERSION = '3.0.0';
+
 function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
-  const [status, setStatus]     = useState<'idle' | 'testing' | 'ok' | 'error'>('idle');
-  const [rootPath, setRootPath] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [status, setStatus]       = useState<'idle' | 'testing' | 'ok' | 'outdated' | 'error'>('idle');
+  const [rootPath, setRootPath]   = useState('');
+  const [bridgeVer, setBridgeVer] = useState('');
+  const [errorMsg, setErrorMsg]   = useState('');
 
   const testConnection = async () => {
     setStatus('testing');
     setErrorMsg('');
     try {
-      const res = await fetch(`http://127.0.0.1:${BRIDGE_PORT}/status`, { signal: AbortSignal.timeout(3000) });
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 3000);
+      const res = await fetch(`http://127.0.0.1:${BRIDGE_PORT}/status`, { signal: ctrl.signal }).finally(() => clearTimeout(t));
       if (!res.ok) throw new Error(`Bridge returned ${res.status}`);
       const data = await res.json();
       setRootPath(data.rootPath ?? '');
-      setStatus('ok');
+      setBridgeVer(data.version ?? '?');
+      // Compare versions — require 3.0.0+
+      const ver = (data.version ?? '0').split('.').map(Number);
+      const req = REQUIRED_BRIDGE_VERSION.split('.').map(Number);
+      const isOld = ver[0] < req[0] || (ver[0] === req[0] && ver[1] < req[1]);
+      setStatus(isOld ? 'outdated' : 'ok');
     } catch (e: any) {
-      setErrorMsg('Could not reach the bridge. Make sure the terminal is still running.');
+      setErrorMsg('Bridge not running — close the old window, re-download the .bat, and double-click it.');
       setStatus('error');
     }
   };
@@ -656,7 +666,15 @@ function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
         {status === 'ok' && (
           <div className="flex items-center gap-2 text-emerald-400 text-[11px]">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Bridge is live · root: <code className="font-mono text-white/45 text-[10px]">{rootPath}</code>
+            Bridge v{bridgeVer} · root: <code className="font-mono text-white/45 text-[10px]">{rootPath}</code>
+          </div>
+        )}
+        {status === 'outdated' && (
+          <div className="rounded-lg bg-amber-500/10 border border-amber-500/25 p-3 space-y-1">
+            <p className="text-[12px] text-amber-400 font-semibold">⚠ Old bridge running (v{bridgeVer})</p>
+            <p className="text-[11px] text-white/50">
+              Close the terminal, re-download <strong>dedomena-bridge.bat</strong> above, and double-click it to get v3.
+            </p>
           </div>
         )}
         {status === 'error' && (
@@ -688,9 +706,8 @@ function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
 
       <div className="flex gap-3 justify-end pt-1">
         <Button variant="ghost" onClick={onBack}>Back</Button>
-        {status === 'ok' && (
-          <Button onClick={handleConnect}>Connect Bridge</Button>
-        )}
+        {status === 'ok' && <Button onClick={handleConnect}>Connect Bridge</Button>}
+        {status === 'outdated' && <Button variant="ghost" disabled>Update required</Button>}
       </div>
     </div>
   );
