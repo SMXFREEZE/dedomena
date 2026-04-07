@@ -19,27 +19,19 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-:: Delete old version so we always run fresh
-if exist "%USERPROFILE%\Downloads\dedomena-bridge.js" (
-    del "%USERPROFILE%\Downloads\dedomena-bridge.js" >nul 2>&1
-)
-
-:: Download latest
-echo  Downloading bridge v3...
-powershell -Command "try { Invoke-WebRequest -Uri 'https://dedomena.vercel.app/dedomena-bridge.js' -OutFile '%USERPROFILE%\Downloads\dedomena-bridge.js' -UseBasicParsing -ErrorAction Stop; Write-Host 'OK' } catch { Write-Host 'FAIL'; exit 1 }"
-
+:: Check the JS file exists
 if not exist "%USERPROFILE%\Downloads\dedomena-bridge.js" (
+    echo  ERROR: dedomena-bridge.js not found in Downloads.
     echo.
-    echo  Download failed.
-    echo  Go back to dedomena, click the JS download button
-    echo  and save it to your Downloads folder, then run this again.
+    echo  Go back to dedomena app - Add Source - Live Desktop Bridge
+    echo  and click the green download button for dedomena-bridge.js
+    echo  Save it to your Downloads folder, then run this .bat again.
     echo.
     pause
     exit /b 1
 )
 
-echo.
-echo  Starting bridge...
+echo  Starting...
 echo.
 node "%USERPROFILE%\Downloads\dedomena-bridge.js" %*
 
