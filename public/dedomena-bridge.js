@@ -115,14 +115,15 @@ const STOP = new Set([
   'a','an','the','is','are','was','were','be','been','being',
   'have','has','had','do','does','did','will','would','could','should','may','might',
   'i','you','he','she','it','we','they','me','him','her','us','them',
-  'what','which','who','whom','this','that','these','those',
+  // keep: what, which, who — used for intent detection before stop-word strip
+  'this','that','these','those',
   'and','but','or','nor','for','yet','so','in','on','at','to','of','with',
   'by','from','up','about','into','through','during','before','after',
   'can','my','your','his','its','our','their','there','here',
-  'see','look','find','show','tell','give','know','think','want','need',
-  'any','all','both','each','few','more','most','other','some','such',
+  'look','tell','give','know','think','want','need',
+  'any','both','each','few','more','most','other','some','such',
   'no','not','only','own','same','than','too','very','just','also',
-  'get','make','let','like','how','where','when','why','please',
+  'get','make','let','like','how','where','when','why','please','have',
 ]);
 
 function extractKeywords(query) {
@@ -132,6 +133,66 @@ function extractKeywords(query) {
     .split(/\s+/)
     .map(w => w.replace(/^['"-]+|['"-]+$/g, ''))
     .filter(w => w.length > 2 && !STOP.has(w));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SPECIAL FOLDER MAP  (Windows + macOS/Linux)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SPECIAL_FOLDERS = {
+  desktop:   path.join(os.homedir(), 'Desktop'),
+  downloads: path.join(os.homedir(), 'Downloads'),
+  documents: path.join(os.homedir(), 'Documents'),
+  pictures:  path.join(os.homedir(), 'Pictures'),
+  music:     path.join(os.homedir(), 'Music'),
+  videos:    path.join(os.homedir(), 'Videos'),
+  home:      os.homedir(),
+};
+
+// List intent words — user wants a directory listing not content search
+const LIST_INTENT = new Set([
+  'list', 'show', 'see', 'files', 'folders', 'inside', 'contents',
+  'what', 'everything', 'all', 'browse', 'open', 'explore',
+]);
+
+// Detect if query is "show me files in X" vs "find content about X"
+function detectListIntent(query, keywords) {
+  const words = query.toLowerCase().split(/\s+/);
+  const hasListWord = words.some(w => LIST_INTENT.has(w));
+  const hasSpecialFolder = keywords.some(k => SPECIAL_FOLDERS[k]);
+  return hasListWord || hasSpecialFolder;
+}
+
+// Build a directory listing as readable text for Claude
+function buildDirectoryListing(dirPath, label) {
+  let entries;
+  try { entries = fs.readdirSync(dirPath, { withFileTypes: true }); }
+  catch { return { error: `Cannot read directory: ${dirPath}` }; }
+
+  const items = entries
+    .filter(e => !e.name.startsWith('.') && !SKIP_DIRS.has(e.name))
+    .sort((a, b) => Number(b.isDirectory()) - Number(a.isDirectory()) || a.name.localeCompare(b.name));
+
+  const folders = items.filter(e => e.isDirectory()).map(e => `  📁 ${e.name}/`);
+  const files   = items.filter(e => e.isFile()).map(e => {
+    const full = path.join(dirPath, e.name);
+    let size = '';
+    try { const st = fs.statSync(full); size = st.size < 1024 ? `${st.size}B` : st.size < 1048576 ? `${(st.size/1024).toFixed(0)}KB` : `${(st.size/1048576).toFixed(1)}MB`; } catch {}
+    return `  📄 ${e.name}  [${size}]`;
+  });
+
+  const listing = [...folders, ...files].join('\n');
+  return {
+    snippets: [{
+      file: dirPath,
+      name: label,
+      dir:  dirPath.replace(os.homedir(), '~'),
+      excerpt: `Contents of ${label} (${folders.length} folders, ${files.length} files):\n\n${listing || '(empty)'}`,
+      canRead: true,
+    }],
+    fileCount: items.length,
+    isListing: true,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -205,8 +266,38 @@ function agentSearch(query, root) {
   console.log(`[agent] keywords: [${keywords.join(', ')}]`);
 
   if (keywords.length === 0) {
-    return { snippets: [], fileCount: 0, keywords: [], foldersExplored: [], note: 'No meaningful keywords found.' };
+    // No keywords — list home directory
+    return { ...buildDirectoryListing(root, 'Home Directory'), keywords: [], foldersExplored: [] };
   }
+
+  // ── Special folder shortcut ───────────────────────────────────────────────
+  // If user says "desktop", "downloads" etc., directly list that folder
+  const isListIntent = detectListIntent(query, keywords);
+  for (const kw of keywords) {
+    const specialPath = SPECIAL_FOLDERS[kw];
+    if (specialPath && fs.existsSync(specialPath)) {
+      console.log(`[agent] special folder: ${kw} → ${specialPath}`);
+      const listing = buildDirectoryListing(specialPath, kw.charAt(0).toUpperCase() + kw.slice(1));
+      return { ...listing, keywords, foldersExplored: [kw] };
+    }
+  }
+
+  // ── Fuzzy folder name match → list that folder ────────────────────────────
+  if (isListIntent) {
+    // Try to find the best-matching folder and list it
+    let bestFolder = null, bestScore = 0;
+    for (const { full, name, isDir } of walkDir(root)) {
+      if (!isDir) continue;
+      const score = fuzzyScore(name, keywords);
+      if (score > bestScore && score >= FUZZY_THRESH) { bestScore = score; bestFolder = { full, name }; }
+    }
+    if (bestFolder) {
+      console.log(`[agent] listing folder: "${bestFolder.name}" (score ${bestScore.toFixed(2)})`);
+      const listing = buildDirectoryListing(bestFolder.full, `${bestFolder.name} (${(bestScore*100).toFixed(0)}% match)`);
+      return { ...listing, keywords, foldersExplored: [`${bestFolder.name} (${(bestScore*100).toFixed(0)}% match)`] };
+    }
+  }
+
 
   const fileScores  = new Map();  // filepath → score
   const folderHits  = [];         // { path, name, score } — fuzzy-matched directories
