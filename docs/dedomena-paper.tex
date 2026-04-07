@@ -1,0 +1,243 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.6cm, top=3.0cm, bottom=3.0cm]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{abstract}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.rounded}
+
+\hypersetup{colorlinks=true, urlcolor=black, linkcolor=black,
+            pdftitle={dedomena -- Internal Product Overview}}
+
+% ── Title block ───────────────────────────────────────────────────────────────
+\title{%
+  \textbf{dedomena}\\[0.4em]
+  \large Internal Product Overview
+}
+\author{%
+  Made by Sami El-Figha\\[0.2em]
+  \small\href{https://linkedin.com/in/samielgha}{linkedin.com/in/samielgha}
+}
+\date{April 7, 2026}
+
+% ── Document ──────────────────────────────────────────────────────────────────
+\begin{document}
+
+\maketitle
+\thispagestyle{plain}
+
+% ── Abstract ──────────────────────────────────────────────────────────────────
+\begin{abstract}
+In most organisations, data questions still pass through a small team of analysts,
+which means waiting hours or even days for answers that should be immediate.
+dedomena solves this by letting any team member type a question in plain English
+and receive a structured, sourced answer in seconds, with no knowledge of SQL or
+data architecture required. In the background, a three-tier pipeline handles
+everything: a question parser determines the real intent of the query, a data
+retriever extracts only the relevant portion from connected sources (CRM,
+databases, spreadsheets, finance tools, and more), and an answer builder formats
+the result and flags any detected anomalies. Raw data never leaves the
+organisation's infrastructure, every query is logged for audit purposes, and
+analysts get their time back for work that actually requires their expertise.
+\end{abstract}
+
+% ── System Architecture diagram ───────────────────────────────────────────────
+\section*{System Architecture}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.4cm,
+    tier/.style={font=\footnotesize\itshape, text=black!50},
+    box/.style={rectangle, rounded corners=4pt, draw=black!40,
+                fill=black!4, font=\small, inner sep=8pt,
+                minimum height=0.9cm, minimum width=2.8cm, text centered},
+    src/.style={rectangle, rounded corners=4pt, draw=black!30,
+                fill=black!2, font=\small, inner sep=7pt,
+                minimum height=0.8cm, minimum width=2.6cm, text centered},
+    arr/.style={-{Stealth[length=5pt]}, thick, black!50}
+  ]
+
+  % Tier labels (left margin)
+  \node[tier] (t1) at (-1.0, 0)    {Tier 1};
+  \node[tier] (t2) at (-1.0, -1.9) {Tier 2};
+  \node[tier] (t3) at (-1.0, -4.0) {Tier 3};
+
+  % Tier 1 -- User query
+  \node[box] (query) at (4.5, 0) {Query};
+
+  % Tier 2 -- Processing pipeline
+  \node[box] (parser)  at (1.5, -1.9) {Parser};
+  \node[box] (ret)     at (4.5, -1.9) {Retriever};
+  \node[box] (builder) at (7.5, -1.9) {Answer Builder};
+
+  % Tier 3 -- Data sources
+  \node[src] (crm)   at (1.5, -4.0) {CRM / Sales};
+  \node[src] (db)    at (4.5, -4.0) {Databases};
+  \node[src] (files) at (7.5, -4.0) {Files / Finance};
+
+  % Arrows: Query down to pipeline
+  \draw[arr] (query) -- (parser);
+  \draw[arr] (query) -- (ret);
+  \draw[arr] (query) -- (builder);
+
+  % Arrows: pipeline left to right
+  \draw[arr] (parser)  -- (ret);
+  \draw[arr] (ret)     -- (builder);
+
+  % Arrows: sources up to retriever
+  \draw[arr] (crm)   -- (ret);
+  \draw[arr] (db)    -- (ret);
+  \draw[arr] (files) -- (ret);
+
+\end{tikzpicture}
+\caption{Three-tier system architecture.}
+\end{figure}
+
+% ── The Problem ───────────────────────────────────────────────────────────────
+\section*{The Problem}
+
+Getting a data answer today takes one to three business days. A manager emails an
+analyst, the analyst locates data across multiple systems, writes a query, formats
+a report, and sends it back. By then the decision context has often changed.
+
+The root cause is fragmentation. A question like \textit{Which region grew fastest
+this quarter?} may require pulling from a CRM, a finance system, and several
+spreadsheets at once. No conventional tool bridges those sources. Every cross-system
+question becomes manual work, and a small number of technical staff become a
+bottleneck for the whole organisation.
+
+% ── The Solution ──────────────────────────────────────────────────────────────
+\section*{The Solution}
+
+dedomena connects to all data sources once and lets any authorised user type a
+question in plain English. The platform queries all relevant sources simultaneously
+and returns a structured, sourced answer in under 30 seconds. No SQL. No formulas.
+No waiting.
+
+The workflow reduces to three steps:
+
+\begin{enumerate}
+  \item \textbf{Connect.} An administrator links data sources once. No ongoing
+        maintenance required.
+  \item \textbf{Ask.} Any user types a question. The platform handles source
+        selection and retrieval automatically.
+  \item \textbf{Act.} A sourced answer is returned in the most useful format:
+        prose, table, or list.
+\end{enumerate}
+
+% ── How It Works ──────────────────────────────────────────────────────────────
+\section*{How It Works}
+
+\textbf{Question Parser.}
+Extracts intent, entities, time ranges, and metrics from the user's input
+regardless of phrasing.
+
+\textbf{Data Retriever.}
+Queries only the sources relevant to that intent. Raw data never leaves the
+organisation's infrastructure. Only the query-relevant excerpt moves forward.
+
+\textbf{Answer Builder.}
+Synthesises retrieved excerpts into a response in the most useful format and
+flags anomalies automatically.
+
+% ── Supported Data Sources ────────────────────────────────────────────────────
+\section*{Supported Data Sources}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{>{\bfseries}ll}
+  \toprule
+  Category & Examples \\
+  \midrule
+  CRM and sales          & Salesforce, HubSpot, Pipedrive \\
+  Databases              & PostgreSQL, MySQL, BigQuery, Snowflake \\
+  Files and spreadsheets & Excel, CSV, PDF, Google Sheets \\
+  Cloud storage          & Google Drive, OneDrive, SharePoint \\
+  Finance                & QuickBooks, Stripe \\
+  Project management     & Notion, Airtable, Jira, Asana \\
+  \bottomrule
+\end{tabular}
+\caption{Data source categories supported at initial release. Over 100 source
+types in total.}
+\end{table}
+
+% ── Who Benefits ──────────────────────────────────────────────────────────────
+\section*{Who Benefits}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{>{\bfseries}lp{9cm}}
+  \toprule
+  Role & What they get \\
+  \midrule
+  Management  & Answers to performance questions without waiting for reports. \\[4pt]
+  Sales       & Account history and pipeline health on demand. \\[4pt]
+  Operations  & A unified view across inventory, suppliers, and process data. \\[4pt]
+  Finance     & Cross-system budget and variance checks without formulas. \\[4pt]
+  Analysts    & Freed from routine queries. Focus on higher-order analysis. \\
+  \bottomrule
+\end{tabular}
+\caption{Roles and corresponding benefits.}
+\end{table}
+
+% ── Data Privacy ──────────────────────────────────────────────────────────────
+\section*{Data Privacy}
+
+Raw data never leaves the organisation's environment. When a question is asked,
+only the query-relevant excerpt is passed to the reasoning layer. Everything else
+stays in place. This satisfies data residency requirements in regulated industries.
+
+% ── Expected Benefits ─────────────────────────────────────────────────────────
+\section*{Expected Benefits}
+
+\begin{enumerate}
+  \item \textbf{Speed.} One to three day turnaround collapses to under 30 seconds.
+  \item \textbf{Accessibility.} No technical training required. Any staff member
+        can use it from day one.
+  \item \textbf{Single interface.} One place to query all sources instead of
+        logging into multiple systems.
+  \item \textbf{Audit trail.} Every query is logged with the sources consulted
+        and a timestamp.
+  \item \textbf{Analyst capacity.} Technical staff are freed from routine queries
+        and redirected to deeper work.
+\end{enumerate}
+
+% ── Rollout Plan ──────────────────────────────────────────────────────────────
+\section*{Rollout Plan}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{>{\bfseries}lll}
+  \toprule
+  Phase & When & Activities \\
+  \midrule
+  1\ \ Pilot    & Weeks 1--2  & Connect 2--3 key sources. Trial with managers. Collect feedback. \\[4pt]
+  2\ \ Rollout  & Month 2     & Connect all sources. Open to all teams. Short onboarding session. \\[4pt]
+  3\ \ Optimise & Month 3+    & Review common queries. Build standing summaries. \\
+  \bottomrule
+\end{tabular}
+\caption{Recommended phased rollout plan.}
+\end{table}
+
+% ── Conclusion ────────────────────────────────────────────────────────────────
+\section*{Conclusion}
+
+dedomena gives any member of the organisation the ability to ask a question about
+business data and get a clear, sourced answer in seconds, without writing code,
+without waiting for a report, and without knowing where the data lives. It removes
+the bottleneck on technical staff and gives every team direct access to the
+information they need.
+
+\vspace{1.5em}
+\noindent\textcolor{black!40}{\small This document is intended for internal review.}
+
+\end{document}
