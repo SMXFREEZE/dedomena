@@ -8,51 +8,45 @@
 \usepackage{microtype}
 \usepackage{parskip}
 \usepackage{titlesec}
-\usepackage{titling}
 \usepackage{xcolor}
 \usepackage{mdframed}
 \usepackage{enumitem}
 \usepackage{booktabs}
 \usepackage{array}
-\usepackage{graphicx}
 \usepackage{fancyhdr}
 \usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{shapes.geometric, shapes.rounded, arrows.meta, positioning,
+                fit, backgrounds, shadows.blur, calc}
 
 % ── Colors ────────────────────────────────────────────────────────────────────
-\definecolor{accent}{RGB}{94, 106, 210}       % indigo
+\definecolor{accent}{RGB}{94, 106, 210}
+\definecolor{accentlight}{RGB}{220, 223, 245}
 \definecolor{lightgray}{RGB}{245, 246, 248}
-\definecolor{darkgray}{RGB}{60, 65, 80}
-\definecolor{mutedtext}{RGB}{110, 115, 130}
-\definecolor{green}{RGB}{22, 163, 74}
-\definecolor{amber}{RGB}{180, 120, 20}
+\definecolor{darkgray}{RGB}{50, 55, 70}
+\definecolor{mutedtext}{RGB}{110, 115, 135}
+\definecolor{csource}{RGB}{167, 139, 250}   % purple  - sources
+\definecolor{cengine}{RGB}{94, 106, 210}    % indigo  - engine
+\definecolor{coutput}{RGB}{52, 211, 153}    % emerald - output
+\definecolor{cdanger}{RGB}{239, 68, 68}     % red     - problem
+\definecolor{cokay}{RGB}{34, 197, 94}       % green   - solution
+\definecolor{camber}{RGB}{245, 158, 11}     % amber   - warning / phase
 
 % ── Hyperref ──────────────────────────────────────────────────────────────────
-\hypersetup{
-  colorlinks=true,
-  linkcolor=accent,
-  urlcolor=accent,
-  pdfauthor={dedomena},
-  pdftitle={dedomena -- Product Overview},
-}
+\hypersetup{colorlinks=true, linkcolor=accent, urlcolor=accent,
+            pdftitle={dedomena Product Overview}}
 
 % ── Section styles ────────────────────────────────────────────────────────────
 \titleformat{\section}
-  {\large\bfseries\color{darkgray}}
-  {}
-  {0em}
-  {}
+  {\large\bfseries\color{darkgray}}{}{}{}
   [\vspace{-0.3em}\textcolor{accent}{\rule{\linewidth}{1.5pt}}\vspace{0.4em}]
-
-\titleformat{\subsection}
-  {\normalsize\bfseries\color{darkgray}}
-  {}
-  {0em}
-  {}
-
+\titleformat{\subsection}{\normalsize\bfseries\color{darkgray}}{}{}{}
 \titlespacing{\section}{0pt}{1.8em}{0.6em}
 \titlespacing{\subsection}{0pt}{1.2em}{0.3em}
 
-% ── Header and footer ─────────────────────────────────────────────────────────
+% ── Header / footer ───────────────────────────────────────────────────────────
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\textcolor{mutedtext}{dedomena \textsigma}}
@@ -60,63 +54,86 @@
 \fancyfoot[C]{\small\textcolor{mutedtext}{\thepage}}
 \renewcommand{\headrulewidth}{0pt}
 
-% ── Callout box ───────────────────────────────────────────────────────────────
-\newmdenv[
-  backgroundcolor=lightgray,
-  linecolor=accent,
-  linewidth=3pt,
-  topline=false,
-  bottomline=false,
-  rightline=false,
-  innerleftmargin=14pt,
-  innerrightmargin=14pt,
-  innertopmargin=10pt,
-  innerbottommargin=10pt,
-  skipabove=10pt,
-  skipbelow=10pt,
-]{callout}
+% ── Callout boxes ─────────────────────────────────────────────────────────────
+\newmdenv[backgroundcolor=lightgray, linecolor=accent, linewidth=3pt,
+          topline=false, bottomline=false, rightline=false,
+          innerleftmargin=14pt, innerrightmargin=14pt,
+          innertopmargin=10pt, innerbottommargin=10pt,
+          skipabove=10pt, skipbelow=10pt]{callout}
 
-% ── Highlight box ─────────────────────────────────────────────────────────────
-\newmdenv[
-  backgroundcolor=accent!8,
-  linecolor=accent!40,
-  linewidth=1pt,
-  roundcorner=4pt,
-  innerleftmargin=14pt,
-  innerrightmargin=14pt,
-  innertopmargin=10pt,
-  innerbottommargin=10pt,
-  skipabove=10pt,
-  skipbelow=10pt,
-]{highlight}
+\newmdenv[backgroundcolor=accent!7, linecolor=accent!35, linewidth=1pt,
+          roundcorner=5pt, innerleftmargin=14pt, innerrightmargin=14pt,
+          innertopmargin=10pt, innerbottommargin=10pt,
+          skipabove=10pt, skipbelow=10pt]{highlight}
+
+% ── TikZ styles ───────────────────────────────────────────────────────────────
+\tikzset{
+  % Generic rounded box
+  box/.style={
+    rectangle, rounded corners=6pt,
+    draw=#1!60, fill=#1!10, text=#1!80!black,
+    minimum height=1.0cm, text centered,
+    font=\small\bfseries, inner sep=8pt,
+    drop shadow={shadow xshift=1pt, shadow yshift=-1pt,
+                 fill=#1!20, opacity=0.5}
+  },
+  % Arrow
+  arr/.style={-{Stealth[length=6pt]}, thick, color=#1, shorten >=2pt, shorten <=2pt},
+  % Small pill label on arrows
+  alabel/.style={font=\scriptsize\itshape, text=mutedtext,
+                 fill=white, inner sep=2pt, midway, sloped=false},
+}
 
 % ── Document ──────────────────────────────────────────────────────────────────
 \begin{document}
 
 % ── Cover block ───────────────────────────────────────────────────────────────
+\thispagestyle{empty}
 \begin{center}
-  \vspace*{1.2cm}
-  {\fontsize{32}{38}\selectfont\bfseries\color{darkgray} dedomena}
+  \vspace*{1.4cm}
+  {\fontsize{36}{42}\selectfont\bfseries\color{darkgray} dedomena}
   \hspace{0.4em}
-  {\fontsize{32}{38}\selectfont\color{accent!50} \textsigma}
+  {\fontsize{36}{42}\selectfont\color{accent!45}\textsigma}
 
-  \vspace{0.5em}
+  \vspace{0.6em}
   {\large\color{mutedtext} A smarter way to work with your data}
 
-  \vspace{1.4em}
-  \textcolor{accent!30}{\rule{6cm}{0.6pt}}
+  \vspace{1.6em}
+  \textcolor{accent!30}{\rule{7cm}{0.6pt}}
 
   \vspace{1em}
   {\small\color{mutedtext}
     Product Overview \quad\textbullet\quad Internal Document \quad\textbullet\quad \today
   }
+  \vspace{0.6cm}
+
+  % ── Cover diagram: the one-line pitch ──────────────────────────────────────
+  \begin{tikzpicture}[node distance=0.8cm and 1.1cm]
+    \node[box=csource, minimum width=3.2cm] (src) {Your Data};
+    \node[box=cengine, minimum width=3.2cm, right=of src] (eng) {dedomena};
+    \node[box=coutput, minimum width=3.2cm, right=of eng] (out) {Clear Answer};
+
+    \draw[arr=csource] (src) -- (eng)
+      node[alabel, above] {connects};
+    \draw[arr=cengine] (eng) -- (out)
+      node[alabel, above] {delivers};
+
+    \node[font=\scriptsize\color{mutedtext}, below=0.35cm of src]
+      {100+ sources};
+    \node[font=\scriptsize\color{mutedtext}, below=0.35cm of eng]
+      {AI reasoning};
+    \node[font=\scriptsize\color{mutedtext}, below=0.35cm of out]
+      {in seconds};
+  \end{tikzpicture}
+
   \vspace{1.6cm}
 \end{center}
+\newpage
 
 % ── 1. What is dedomena ───────────────────────────────────────────────────────
 \section{What Is dedomena?}
 
-dedomena is a web-based platform that lets anyone in the organisation ask questions
+dedomena is a web platform that lets anyone in the organisation ask questions
 about business data in plain English and get clear, sourced answers in seconds.
 
 No SQL. No Excel formulas. No waiting for an analyst to run a report.
@@ -124,66 +141,184 @@ You connect your data sources once, type your question, and the platform does th
 
 \begin{callout}
   \textbf{Think of it like having a very knowledgeable assistant who has read every
-  spreadsheet, every database table, and every report in the company, and who is always
-  ready to answer a question instantly.}
+  spreadsheet, every database table, and every report in the company, and who is
+  always ready to answer a question instantly.}
 \end{callout}
 
-% ── 2. The problem we are solving ─────────────────────────────────────────────
+
+% ── 2. The problem ────────────────────────────────────────────────────────────
 \section{The Problem We Are Solving}
 
-Right now, getting answers from data at our organisation looks like this:
+\subsection{The old way is too slow}
 
-\begin{enumerate}[leftmargin=1.6em, itemsep=4pt]
-  \item A manager or team lead needs a number or a summary.
-  \item They email an analyst or open a ticket.
-  \item The analyst has to find the right data source, write a query or formula,
-        and format a report.
-  \item The answer arrives hours or days later.
-  \item By the time it does, the context has shifted.
-\end{enumerate}
+Getting an answer from data today involves too many steps and too many people.
+The diagram below shows what a typical request looks like right now.
 
-This process is slow, it creates a bottleneck on a small number of technical people,
-and it means decisions are made without the information that already exists.
+\vspace{0.6em}
+\begin{center}
+\begin{tikzpicture}[node distance=0.5cm and 0.7cm,
+    step/.style={rectangle, rounded corners=4pt, draw=cdanger!50,
+                 fill=cdanger!8, text=cdanger!80!black, font=\small,
+                 minimum height=0.85cm, minimum width=3.0cm,
+                 text centered, inner sep=6pt},
+    wait/.style={font=\scriptsize\itshape\color{mutedtext},
+                 fill=white, inner sep=2pt}]
 
-Beyond speed, there is a second problem: \textbf{data lives in too many places at once}.
-CRM records are in one tool. Financial data is in another. Project updates live in
-spreadsheets. Nobody has a single view of all of it.
+  \node[step] (s1) {Manager needs a number};
+  \node[step, right=of s1] (s2) {Emails analyst};
+  \node[step, right=of s2] (s3) {Analyst finds data};
+  \node[step, below=of s3] (s4) {Analyst writes query};
+  \node[step, left=of s4]  (s5) {Formats a report};
+  \node[step, left=of s5]  (s6) {Manager gets answer};
+
+  \draw[arr=cdanger] (s1)--(s2) node[wait, above]{};
+  \draw[arr=cdanger] (s2)--(s3) node[wait, above]{1--2 days};
+  \draw[arr=cdanger] (s3)--(s4);
+  \draw[arr=cdanger] (s4)--(s5) node[wait, above]{hours};
+  \draw[arr=cdanger] (s5)--(s6);
+
+  \node[font=\scriptsize\bfseries\color{cdanger},
+        below=0.7cm of s5, xshift=1.5cm]
+    {Total time: 1 to 3 days for a single question};
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
+This is slow. It creates a bottleneck on a small number of technical people,
+and it means decisions are made without information that already exists.
+
+\subsection{Data lives in too many places}
+
+Beyond speed, a second problem is that data is scattered. No single tool gives a
+combined view, which means every cross-system question requires manual work.
+
+\vspace{0.6em}
+\begin{center}
+\begin{tikzpicture}[
+    silo/.style={rectangle, rounded corners=5pt,
+                 draw=mutedtext!50, fill=lightgray,
+                 font=\small, minimum width=2.2cm, minimum height=0.9cm,
+                 text centered, inner sep=6pt, text=darkgray},
+    question/.style={ellipse, draw=cdanger!60, fill=cdanger!8,
+                     font=\small\itshape, text=cdanger!80!black,
+                     inner sep=8pt}]
+
+  \node[silo] (crm)  at (0,0)    {CRM};
+  \node[silo] (fin)  at (2.6,0)  {Finance};
+  \node[silo] (ops)  at (5.2,0)  {Operations};
+  \node[silo] (hr)   at (7.8,0)  {HR};
+  \node[silo] (files)at (3.9,-1.6){Spreadsheets};
+
+  \node[question] (q) at (3.9, -3.2)
+    {"Which region grew fastest this quarter?"};
+
+  \foreach \n in {crm, fin, ops, hr, files}{
+    \draw[thick, dashed, color=mutedtext!50] (\n) -- (q);
+  }
+
+  \node[font=\scriptsize\color{mutedtext}, below=0.25cm of q]
+    {No single tool can answer this. Someone has to pull from all of them manually.};
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
 
 % ── 3. How we will use dedomena ───────────────────────────────────────────────
 \section{How We Will Use dedomena}
 
-\subsection{Step one: Connect our data sources}
+\subsection{The new way: one question, one answer}
 
-We start by connecting the tools and databases we already use. This is a one-time
-setup that takes a few minutes per source. dedomena supports more than one hundred
-common business tools out of the box, including:
+With dedomena, the same request that used to take days now takes seconds.
+The entire workflow collapses into three steps.
 
-\vspace{0.5em}
-\begin{tabular}{>{\color{mutedtext}\small}p{4.5cm} >{\small}p{9cm}}
-  \toprule
-  \textbf{\normalcolor Category} & \textbf{Examples we can connect} \\
-  \midrule
-  CRM and sales       & Salesforce, HubSpot, Pipedrive \\
-  Databases           & PostgreSQL, MySQL, BigQuery, Snowflake \\
-  Spreadsheets and files & Excel, CSV, PDF, Google Sheets \\
-  Cloud storage       & Google Drive, OneDrive, SharePoint, Dropbox \\
-  Finance             & QuickBooks, Stripe, accounting exports \\
-  Project management  & Notion, Airtable, Jira, Asana \\
-  Communication       & Slack exports, email archives \\
-  \bottomrule
-\end{tabular}
+\vspace{0.6em}
+\begin{center}
+\begin{tikzpicture}[node distance=1.0cm and 1.4cm,
+    step/.style={rectangle, rounded corners=6pt,
+                 draw=cokay!60, fill=cokay!8, text=cokay!80!black,
+                 font=\small\bfseries, minimum height=1.0cm,
+                 minimum width=3.6cm, text centered, inner sep=8pt,
+                 drop shadow={shadow xshift=1pt, shadow yshift=-1pt,
+                              fill=cokay!20, opacity=0.4}}]
+
+  \node[step] (a) {Ask a question};
+  \node[step, right=of a] (b) {dedomena reads all sources};
+  \node[step, right=of b] (c) {Answer delivered};
+
+  \draw[arr=cokay] (a)--(b)
+    node[midway, above, font=\scriptsize\itshape\color{mutedtext}]{instantly};
+  \draw[arr=cokay] (b)--(c)
+    node[midway, above, font=\scriptsize\itshape\color{mutedtext}]{seconds};
+
+  \node[font=\scriptsize\bfseries\color{cokay},
+        below=0.7cm of b]{Total time: under 30 seconds};
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
+\subsection{Step one: connect our data sources}
+
+We connect the tools and databases we already use. This is a one-time setup
+that takes a few minutes per source. Once connected, dedomena keeps the data
+ready for questions. Nothing is sent to a third party. Everything stays in our
+environment.
 
 \vspace{0.8em}
-Once connected, dedomena reads the data and keeps it ready for questions.
-Nothing is uploaded to a third party. Everything stays within our environment.
+\begin{center}
+\begin{tikzpicture}[
+    cat/.style={rectangle, rounded corners=5pt,
+                draw=csource!50, fill=csource!8,
+                font=\small\bfseries, text=csource!80!black,
+                minimum width=3.0cm, minimum height=0.85cm,
+                text centered, inner sep=8pt},
+    eng/.style={rectangle, rounded corners=8pt,
+                draw=cengine!60, fill=cengine!12,
+                font=\normalsize\bfseries, text=cengine!80!black,
+                minimum width=2.6cm, minimum height=3.8cm,
+                text centered, inner sep=10pt,
+                drop shadow={shadow xshift=1.5pt, shadow yshift=-1.5pt,
+                             fill=cengine!25, opacity=0.5}},
+    arr/.style={-{Stealth[length=5pt]}, thick, color=csource!60}]
 
-\subsection{Step two: Ask questions}
+  % Source nodes (left column)
+  \node[cat] (crm)  at (0, 2.4)  {CRM};
+  \node[cat] (db)   at (0, 1.2)  {Databases};
+  \node[cat] (files)at (0, 0.0)  {Files};
+  \node[cat] (cloud)at (0,-1.2)  {Cloud Storage};
+  \node[cat] (fin)  at (0,-2.4)  {Finance};
 
-Any team member with access to the platform can open dedomena, type a question,
-and receive an answer. The question can be anything that relates to the connected data.
+  % dedomena engine (center)
+  \node[eng] (eng)  at (4.2, 0)  {dedomena};
 
+  % Answer node (right)
+  \node[rectangle, rounded corners=6pt,
+        draw=coutput!60, fill=coutput!10,
+        font=\small\bfseries, text=coutput!80!black,
+        minimum width=2.8cm, minimum height=1.2cm,
+        text centered, inner sep=10pt,
+        drop shadow={shadow xshift=1pt, shadow yshift=-1pt,
+                     fill=coutput!25, opacity=0.4}]
+       (out) at (8.0, 0) {Your Answer};
+
+  % Arrows from sources to engine
+  \foreach \s in {crm, db, files, cloud, fin}{
+    \draw[arr] (\s) -- (eng);
+  }
+
+  % Arrow from engine to answer
+  \draw[-{Stealth[length=6pt]}, thick, color=cengine!70] (eng) -- (out)
+    node[midway, above, font=\scriptsize\itshape\color{mutedtext}]{seconds};
+
+  % Labels
+  \node[font=\scriptsize\color{mutedtext}, below=0.3cm of fin]{100+ sources supported};
+\end{tikzpicture}
+\end{center}
 \vspace{0.4em}
-Here are realistic examples of what we would actually type:
+
+\subsection{Step two: ask questions in plain English}
+
+Any team member with access to the platform opens dedomena, types a question,
+and receives an answer. Here are realistic examples of what we would actually type:
 
 \begin{highlight}
   \textit{"What were our top five accounts by revenue last quarter?"}
@@ -195,101 +330,121 @@ Here are realistic examples of what we would actually type:
   \textit{"Which product line has the highest return rate according to our sales data?"}
 
   \vspace{0.4em}
-  \textit{"Compare our headcount from January to today and flag any departments that grew by more than 20 percent."}
+  \textit{"Compare our headcount from January to today and flag any department that
+           grew by more than 20 percent."}
 \end{highlight}
 
-\vspace{0.4em}
 dedomena reads across all connected sources at once, finds the relevant information,
 and writes a clear answer with references to where the data came from.
 
-\subsection{Step three: Act on the results}
+\subsection{Step three: act on the results}
 
 The platform does not just return a number. It explains what it found, flags
-anything that looks unusual, and can present the information as a summary,
-a table, or a list, depending on what is most useful.
+anything unusual, and presents the information as a summary, a table, or a list,
+depending on what is most useful. The person asking has everything they need to
+make a decision without opening a single spreadsheet.
 
-This gives the person asking the question everything they need to make a decision
-or take action, without needing to open a single spreadsheet.
 
-% ── 4. Who benefits and how ───────────────────────────────────────────────────
+% ── 4. Who benefits ───────────────────────────────────────────────────────────
 \section{Who Benefits and How}
 
-\begin{tabular}{>{\bfseries\color{darkgray}}p{3.5cm} p{10.5cm}}
-  \toprule
-  \textbf{Role} & \textbf{What changes for them} \\
-  \midrule
-  Managers and directors
-  &
-  They get answers to operational questions in under a minute instead of waiting
-  for a report. They can monitor performance, compare periods, and spot trends
-  without involving the data team. \\[8pt]
+\vspace{0.4em}
+\begin{center}
+\begin{tikzpicture}[
+    role/.style={rectangle, rounded corners=6pt,
+                 draw=cengine!40, fill=cengine!7,
+                 font=\small\bfseries, text=darkgray,
+                 minimum width=2.6cm, minimum height=0.85cm,
+                 text centered, inner sep=8pt},
+    gain/.style={rectangle, rounded corners=4pt,
+                 draw=coutput!40, fill=coutput!7,
+                 font=\scriptsize, text=darkgray,
+                 minimum width=5.2cm, text width=5.0cm,
+                 inner sep=7pt},
+    conn/.style={-{Stealth[length=5pt]}, thick, color=mutedtext!60}]
 
-  Sales and account teams
-  &
-  They can pull up customer history, deal status, and account health instantly,
-  directly from the CRM and financial data, without needing a dashboard that
-  someone else built. \\[8pt]
+  % Roles (left)
+  \node[role] (mgr)  at (0,  3.0) {Management};
+  \node[role] (sales)at (0,  1.5) {Sales};
+  \node[role] (ops)  at (0,  0.0) {Operations};
+  \node[role] (fin)  at (0, -1.5) {Finance};
+  \node[role] (data) at (0, -3.0) {Analysts};
 
-  Operations teams
-  &
-  They can query inventory levels, supplier data, and process metrics across
-  multiple systems at once and get a combined view in one place. \\[8pt]
+  % Gains (right)
+  \node[gain] (gmgr)  at (7.4,  3.0)
+    {Instant answers to performance questions. No more waiting for reports.};
+  \node[gain] (gsales)at (7.4,  1.5)
+    {Customer history and account health at their fingertips.};
+  \node[gain] (gops)  at (7.4,  0.0)
+    {A combined view of inventory, suppliers, and process data across systems.};
+  \node[gain] (gfin)  at (7.4, -1.5)
+    {Cross-reference financials and flag budget issues without formulas.};
+  \node[gain] (gdata) at (7.4, -3.0)
+    {Free from routine data requests. Focus on deeper analysis.};
 
-  Finance teams
-  &
-  They can cross-reference accounting exports with other business data and ask
-  questions like \textit{"which cost centres are over budget this quarter?"} without
-  writing a single formula. \\[8pt]
+  % Connecting arrows
+  \foreach \r/\g in {mgr/gmgr, sales/gsales, ops/gops, fin/gfin, data/gdata}{
+    \draw[conn] (\r) -- (\g);
+  }
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
 
-  Analysts and developers
-  &
-  They stop being the first point of contact for every data question. They can
-  focus on deeper work while the rest of the organisation handles routine queries
-  independently. \\
-  \bottomrule
-\end{tabular}
 
 % ── 5. What makes it different ────────────────────────────────────────────────
-\section{What Makes It Different from Other Tools}
+\section{What Makes It Different}
 
-\subsection{It understands questions, not just keywords}
+\vspace{0.6em}
+\begin{center}
+\begin{tikzpicture}[
+    col/.style={rectangle, rounded corners=6pt,
+                draw=#1!50, fill=#1!8,
+                minimum width=5.6cm, text width=5.4cm,
+                inner sep=12pt, font=\small, text=#1!80!black},
+    head/.style={font=\small\bfseries, text=#1!80!black}]
 
-Most search tools and dashboards require you to know exactly what you are looking
-for and where it is stored. dedomena understands the meaning of a question and
-figures out which data is relevant on its own. You do not need to know which database
-table holds the answer.
+  % Column headers
+  \node[font=\small\bfseries\color{cdanger!80}] at (0, 0) {Without dedomena};
+  \node[font=\small\bfseries\color{cokay!80}]   at (7.4, 0) {With dedomena};
 
-\subsection{It works across multiple sources at once}
+  % Divider
+  \draw[thick, dashed, color=mutedtext!40] (3.7, 0.5) -- (3.7, -7.8);
 
-A standard BI tool answers questions about one dataset at a time. dedomena can read
-from five different connected sources simultaneously and combine them into a single
-answer. If the answer requires data from both the CRM and the finance system,
-it finds it in both and gives you one coherent response.
+  % Comparison rows
+  \foreach \y/\bad/\good in {
+    -1.0/{Waiting 1 to 3 days for an answer}/{Answer in under 30 seconds},
+    -2.6/{One dashboard at a time}/{Reads all sources at once},
+    -4.2/{Need to know SQL or Excel}/{Plain English questions only},
+    -5.8/{Analyst is the bottleneck}/{Any team member can ask},
+    -7.4/{Data spread across 10 tools}/{One place for all questions}
+  }{
+    \node[col=cdanger, align=left] at (0, \y) {\bad};
+    \node[col=cokay,   align=left] at (7.4, \y) {\good};
+    \node[font=\large\color{accent}] at (3.7, \y) {$\rightarrow$};
+  }
+
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
 
 \subsection{The data stays with us}
 
-This is important from a compliance standpoint. dedomena does not upload your raw
-data to any external server. When a question is asked, only the portions of the
-data that are relevant to that specific question are sent to the AI to generate the
-answer. The rest stays in place.
+This is critical from a compliance standpoint. dedomena does not upload your raw
+data to any external server. When a question is asked, only the portions of data
+that are relevant to that specific question are sent to the AI to generate
+the answer. The rest stays in place, inside our environment.
 
-\subsection{No training or technical knowledge required}
-
-Any member of the team can use it from day one. There is no query language to learn,
-no dashboard to configure, and no report template to fill in. If you can type a
-question in plain English, you can use dedomena.
 
 % ── 6. What we get as an organisation ────────────────────────────────────────
 \section{What We Get as an Organisation}
 
 \begin{enumerate}[leftmargin=1.6em, itemsep=8pt]
-
   \item \textbf{Faster decision-making.}
-  Questions that used to take days to answer take seconds.
-  Teams can act on information while it is still relevant.
+  Questions that used to take days take seconds.
+  Teams act on information while it is still relevant.
 
   \item \textbf{Less dependency on technical staff for routine questions.}
-  Analysts and developers are freed from handling basic data requests.
+  Analysts are freed from handling basic data requests.
   They spend their time on work that actually requires their skills.
 
   \item \textbf{One place to ask questions about all of our data.}
@@ -297,41 +452,74 @@ question in plain English, you can use dedomena.
   everyone queries through one interface.
 
   \item \textbf{A full record of what was asked and when.}
-  Every question is logged with the sources it used.
-  This creates a natural audit trail for any data-driven decision.
+  Every question is logged with the sources it used, creating a natural
+  audit trail for any data-driven decision.
 
-  \item \textbf{Better data literacy across the organisation.}
+  \item \textbf{Better data engagement across the organisation.}
   When people can ask questions directly, they engage with data more often.
   Over time, this builds a culture where decisions are grounded in evidence.
-
 \end{enumerate}
+
 
 % ── 7. Rollout plan ───────────────────────────────────────────────────────────
 \section{Suggested Rollout Plan}
 
-\begin{tabular}{>{\bfseries\color{darkgray}}p{2.5cm} p{11.5cm}}
-  \toprule
-  \textbf{Phase} & \textbf{What happens} \\
-  \midrule
-  Phase 1
-  &
-  Connect two or three of our most-used data sources. Run a two-week pilot with
-  a small group of managers and team leads. Gather feedback on which questions
-  they ask most often and whether the answers are accurate and useful. \\[8pt]
+\vspace{0.8em}
+\begin{center}
+\begin{tikzpicture}[
+    phase/.style={rectangle, rounded corners=6pt,
+                  draw=#1!60, fill=#1!10,
+                  minimum width=4.0cm, text width=3.8cm,
+                  inner sep=12pt, font=\small, text=darkgray,
+                  drop shadow={shadow xshift=1pt, shadow yshift=-1pt,
+                               fill=#1!20, opacity=0.45}},
+    badge/.style={circle, draw=#1!60, fill=#1!15,
+                  font=\small\bfseries, text=#1!80!black,
+                  minimum size=0.9cm},
+    phaseconn/.style={-{Stealth[length=6pt]}, thick, color=mutedtext!50}]
 
-  Phase 2
-  &
-  Expand to the full list of data sources. Open access to all teams.
-  Run a short onboarding session so that everyone knows how to ask a well-formed
-  question and how to interpret the answers. \\[8pt]
+  % Phase nodes
+  \node[phase=camber] (p1) at (0, 0) {
+    \textbf{Phase 1: Pilot}\\[4pt]
+    Connect 2 or 3 key sources.\\
+    Run a 2-week trial with managers and team leads.\\
+    Collect feedback.
+  };
 
-  Phase 3
-  &
-  Use the query history to identify the most common information needs across the
-  organisation. Build standing summaries or scheduled reports for those use cases
-  so that key information is always ready without anyone needing to ask. \\
-  \bottomrule
-\end{tabular}
+  \node[phase=cengine] (p2) at (5.2, 0) {
+    \textbf{Phase 2: Rollout}\\[4pt]
+    Connect all data sources.\\
+    Open access to all teams.\\
+    Run a short onboarding session.
+  };
+
+  \node[phase=coutput] (p3) at (10.4, 0) {
+    \textbf{Phase 3: Optimise}\\[4pt]
+    Review the most common questions.\\
+    Build standing summaries for recurring needs.
+  };
+
+  % Timeline line
+  \draw[thick, color=mutedtext!40] (-2, -1.8) -- (12.4, -1.8);
+
+  % Phase markers on timeline
+  \node[badge=camber] at (0, -1.8)  {1};
+  \node[badge=cengine] at (5.2, -1.8) {2};
+  \node[badge=coutput] at (10.4, -1.8) {3};
+
+  % Time labels
+  \node[font=\scriptsize\color{mutedtext}] at (0, -2.55)  {Weeks 1 to 2};
+  \node[font=\scriptsize\color{mutedtext}] at (5.2, -2.55) {Month 2};
+  \node[font=\scriptsize\color{mutedtext}] at (10.4, -2.55){Month 3 onwards};
+
+  % Connectors between phases
+  \draw[phaseconn] (p1) -- (p2);
+  \draw[phaseconn] (p2) -- (p3);
+
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
 
 % ── 8. Summary ────────────────────────────────────────────────────────────────
 \section{Summary}
@@ -351,7 +539,8 @@ the team direct access to the information they need to do their job well.
 \end{callout}
 
 \vspace{2em}
-\textcolor{mutedtext}{\small This document is intended for internal review. For a live demonstration
-or to discuss integration with our existing tools, please reach out to the product team.}
+\textcolor{mutedtext}{\small This document is intended for internal review. For a
+live demonstration or to discuss integration with our existing tools, please reach
+out to the product team.}
 
 \end{document}
