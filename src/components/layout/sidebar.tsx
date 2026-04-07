@@ -6,7 +6,7 @@ import { useAppStore, ContentStorage } from "@/store";
 import { CONNECTORS_BY_ID } from "@/lib/connectors/registry";
 import { CredentialStorage } from "@/store/credential-store";
 import { runClientFetcher } from "@/lib/connectors/fetchers";
-import { Database, Plus, Settings, Blocks, Sparkles, Network, Trash2, ChevronDown, ChevronRight, RefreshCw, AlertCircle } from "lucide-react";
+import { Database, Plus, Settings, Blocks, Sparkles, Network, Trash2, ChevronDown, ChevronRight, RefreshCw, AlertCircle, Building2 } from "lucide-react";
 import { ConnectorIcon } from "@/components/ui/connector-icon";
 import { cn, fmtChars } from "@/lib/utils";
 import { toast } from "sonner";
@@ -51,9 +51,10 @@ export function Sidebar({
   const totalChars = sources.reduce((acc, s) => acc + (s.charCount || 0), 0);
 
   const navItems = [
-    { id: "intelligence", icon: Sparkles, label: "Intelligence",  desc: "Search & synthesis" },
-    { id: "engineer",     icon: Network,  label: "Data Engineer", desc: "Clean & normalize" },
-    { id: "analyst",      icon: Blocks,   label: "Analyst",       desc: "Charts & insights" },
+    { id: "intelligence",  icon: Sparkles,   label: "Intelligence",  desc: "Search & synthesis" },
+    { id: "engineer",      icon: Network,    label: "Data Engineer", desc: "Clean & normalize" },
+    { id: "analyst",       icon: Blocks,     label: "Analyst",       desc: "Charts & insights" },
+    { id: "architecture",  icon: Building2,  label: "Architecture",  desc: "System overview" },
   ];
 
   const handleDelete = (id: string, name: string, e: React.MouseEvent) => {

@@ -264,13 +264,6 @@ export const CONNECTORS: Connector[] = [
     fields: [],
   },
   {
-    id: 'desktop-bridge', name: 'Live Desktop Bridge', color: '#34d399',
-    category: 'storage', executionMode: 'client', popular: true,
-    description: 'Run a tiny local agent — Claude searches your PC on-demand without importing anything.',
-    tags: ['desktop', 'bridge', 'local', 'agent', 'live', 'search', 'filesystem', 'privacy'],
-    fields: [],
-  },
-  {
     id: 'google-drive', name: 'Google Drive', iconSlug: 'googledrive', color: '#4285f4',
     category: 'storage', executionMode: 'client', popular: true,
     description: 'Docs, Sheets, and files from Google Drive.',

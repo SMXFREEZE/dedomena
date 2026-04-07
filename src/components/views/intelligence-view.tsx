@@ -238,63 +238,7 @@ export function IntelligenceView() {
     });
 
     try {
-      // ── Bridge sources: query on-demand, only return relevant excerpts ──────
-      const bridgeSources  = activeSources.filter(s => s.type === 'desktop-bridge');
-      const regularSources = activeSources.filter(s => s.type !== 'desktop-bridge');
-
-      let bridgeSourcesData: any[] = [];
-      if (bridgeSources.length > 0) {
-        for (const src of bridgeSources) {
-          let rootPath = '';
-          try {
-            const stored = ContentStorage.get(src.id) ?? '{}';
-            rootPath = JSON.parse(stored).rootPath ?? '';
-          } catch { /* ignore */ }
-
-          try {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 8000);
-            const res = await fetch('http://127.0.0.1:7432/search', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: q, rootPath }),
-              signal: controller.signal,
-            }).finally(() => clearTimeout(timer));
-
-            if (res.ok) {
-              const data = await res.json();
-              const snippets: any[] = data.snippets ?? [];
-              const keywords: string[] = data.keywords ?? [];
-              const folders: string[]  = data.foldersExplored ?? [];
-              let content: string;
-              if (snippets.length > 0) {
-                const header = [
-                  `Keywords: [${keywords.join(', ')}]`,
-                  folders.length ? `Folders explored: ${folders.join(', ')}` : null,
-                  `Files found: ${snippets.length}`,
-                ].filter(Boolean).join(' | ');
-                content = header + '\n\n' +
-                  snippets.map((s: any) => `📄 ${s.name}\n📁 ${s.dir}\n${s.excerpt}`).join('\n\n---\n\n');
-              } else {
-                content = `Keywords: [${keywords.join(', ')}] | No matching files found in ${rootPath || 'home directory'}.\n` +
-                  `Tip: Try using specific file or folder names. For example: "outline maisonneuve" or "CEGEP syllabus".`;
-              }
-              bridgeSourcesData.push({ ...src, content: `=== Desktop Bridge: ${src.name} ===\n${content}` });
-            } else {
-              bridgeSourcesData.push({ ...src, content: `[Desktop Bridge returned error ${res.status}]` });
-            }
-          } catch {
-            toast.error('Desktop Bridge is not reachable. Make sure the terminal is still running.');
-            // Still push a placeholder so synthesize doesn't reject with "no content"
-            bridgeSourcesData.push({ ...src, content: `[Desktop Bridge is not running — user needs to start dedomena-bridge.js in their terminal]` });
-          }
-        }
-      }
-
-      const sourcesData = [
-        ...regularSources.map(s => ({ ...s, content: ContentStorage.get(s.id) })),
-        ...bridgeSourcesData,
-      ];
+      const sourcesData = activeSources.map(s => ({ ...s, content: ContentStorage.get(s.id) }));
 
       const selectedSourceIds = selectedIds.size > 0 ? [...selectedIds] : undefined;
 

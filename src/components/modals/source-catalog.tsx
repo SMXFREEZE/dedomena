@@ -29,9 +29,7 @@ export function SourceCatalog({ onSelect }: SourceCatalogProps) {
       if (b.id === 'local-file') return 1;
       if (a.id === 'desktop-connect') return -1;
       if (b.id === 'desktop-connect') return 1;
-      if (a.id === 'desktop-bridge') return -1;
-      if (b.id === 'desktop-bridge') return 1;
-      if (a.popular && !b.popular) return -1;
+if (a.popular && !b.popular) return -1;
       if (!a.popular && b.popular) return 1;
       return a.name.localeCompare(b.name);
     });
