@@ -1,0 +1,357 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.4cm, top=2.8cm, bottom=2.8cm]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{titling}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+% ── Colors ────────────────────────────────────────────────────────────────────
+\definecolor{accent}{RGB}{94, 106, 210}       % indigo
+\definecolor{lightgray}{RGB}{245, 246, 248}
+\definecolor{darkgray}{RGB}{60, 65, 80}
+\definecolor{mutedtext}{RGB}{110, 115, 130}
+\definecolor{green}{RGB}{22, 163, 74}
+\definecolor{amber}{RGB}{180, 120, 20}
+
+% ── Hyperref ──────────────────────────────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=accent,
+  urlcolor=accent,
+  pdfauthor={dedomena},
+  pdftitle={dedomena -- Product Overview},
+}
+
+% ── Section styles ────────────────────────────────────────────────────────────
+\titleformat{\section}
+  {\large\bfseries\color{darkgray}}
+  {}
+  {0em}
+  {}
+  [\vspace{-0.3em}\textcolor{accent}{\rule{\linewidth}{1.5pt}}\vspace{0.4em}]
+
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{darkgray}}
+  {}
+  {0em}
+  {}
+
+\titlespacing{\section}{0pt}{1.8em}{0.6em}
+\titlespacing{\subsection}{0pt}{1.2em}{0.3em}
+
+% ── Header and footer ─────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{mutedtext}{dedomena \textsigma}}
+\fancyhead[R]{\small\textcolor{mutedtext}{Product Overview}}
+\fancyfoot[C]{\small\textcolor{mutedtext}{\thepage}}
+\renewcommand{\headrulewidth}{0pt}
+
+% ── Callout box ───────────────────────────────────────────────────────────────
+\newmdenv[
+  backgroundcolor=lightgray,
+  linecolor=accent,
+  linewidth=3pt,
+  topline=false,
+  bottomline=false,
+  rightline=false,
+  innerleftmargin=14pt,
+  innerrightmargin=14pt,
+  innertopmargin=10pt,
+  innerbottommargin=10pt,
+  skipabove=10pt,
+  skipbelow=10pt,
+]{callout}
+
+% ── Highlight box ─────────────────────────────────────────────────────────────
+\newmdenv[
+  backgroundcolor=accent!8,
+  linecolor=accent!40,
+  linewidth=1pt,
+  roundcorner=4pt,
+  innerleftmargin=14pt,
+  innerrightmargin=14pt,
+  innertopmargin=10pt,
+  innerbottommargin=10pt,
+  skipabove=10pt,
+  skipbelow=10pt,
+]{highlight}
+
+% ── Document ──────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── Cover block ───────────────────────────────────────────────────────────────
+\begin{center}
+  \vspace*{1.2cm}
+  {\fontsize{32}{38}\selectfont\bfseries\color{darkgray} dedomena}
+  \hspace{0.4em}
+  {\fontsize{32}{38}\selectfont\color{accent!50} \textsigma}
+
+  \vspace{0.5em}
+  {\large\color{mutedtext} A smarter way to work with your data}
+
+  \vspace{1.4em}
+  \textcolor{accent!30}{\rule{6cm}{0.6pt}}
+
+  \vspace{1em}
+  {\small\color{mutedtext}
+    Product Overview \quad\textbullet\quad Internal Document \quad\textbullet\quad \today
+  }
+  \vspace{1.6cm}
+\end{center}
+
+% ── 1. What is dedomena ───────────────────────────────────────────────────────
+\section{What Is dedomena?}
+
+dedomena is a web-based platform that lets anyone in the organisation ask questions
+about business data in plain English and get clear, sourced answers in seconds.
+
+No SQL. No Excel formulas. No waiting for an analyst to run a report.
+You connect your data sources once, type your question, and the platform does the rest.
+
+\begin{callout}
+  \textbf{Think of it like having a very knowledgeable assistant who has read every
+  spreadsheet, every database table, and every report in the company, and who is always
+  ready to answer a question instantly.}
+\end{callout}
+
+% ── 2. The problem we are solving ─────────────────────────────────────────────
+\section{The Problem We Are Solving}
+
+Right now, getting answers from data at our organisation looks like this:
+
+\begin{enumerate}[leftmargin=1.6em, itemsep=4pt]
+  \item A manager or team lead needs a number or a summary.
+  \item They email an analyst or open a ticket.
+  \item The analyst has to find the right data source, write a query or formula,
+        and format a report.
+  \item The answer arrives hours or days later.
+  \item By the time it does, the context has shifted.
+\end{enumerate}
+
+This process is slow, it creates a bottleneck on a small number of technical people,
+and it means decisions are made without the information that already exists.
+
+Beyond speed, there is a second problem: \textbf{data lives in too many places at once}.
+CRM records are in one tool. Financial data is in another. Project updates live in
+spreadsheets. Nobody has a single view of all of it.
+
+% ── 3. How we will use dedomena ───────────────────────────────────────────────
+\section{How We Will Use dedomena}
+
+\subsection{Step one: Connect our data sources}
+
+We start by connecting the tools and databases we already use. This is a one-time
+setup that takes a few minutes per source. dedomena supports more than one hundred
+common business tools out of the box, including:
+
+\vspace{0.5em}
+\begin{tabular}{>{\color{mutedtext}\small}p{4.5cm} >{\small}p{9cm}}
+  \toprule
+  \textbf{\normalcolor Category} & \textbf{Examples we can connect} \\
+  \midrule
+  CRM and sales       & Salesforce, HubSpot, Pipedrive \\
+  Databases           & PostgreSQL, MySQL, BigQuery, Snowflake \\
+  Spreadsheets and files & Excel, CSV, PDF, Google Sheets \\
+  Cloud storage       & Google Drive, OneDrive, SharePoint, Dropbox \\
+  Finance             & QuickBooks, Stripe, accounting exports \\
+  Project management  & Notion, Airtable, Jira, Asana \\
+  Communication       & Slack exports, email archives \\
+  \bottomrule
+\end{tabular}
+
+\vspace{0.8em}
+Once connected, dedomena reads the data and keeps it ready for questions.
+Nothing is uploaded to a third party. Everything stays within our environment.
+
+\subsection{Step two: Ask questions}
+
+Any team member with access to the platform can open dedomena, type a question,
+and receive an answer. The question can be anything that relates to the connected data.
+
+\vspace{0.4em}
+Here are realistic examples of what we would actually type:
+
+\begin{highlight}
+  \textit{"What were our top five accounts by revenue last quarter?"}
+
+  \vspace{0.4em}
+  \textit{"Show me a summary of all open support tickets created this month."}
+
+  \vspace{0.4em}
+  \textit{"Which product line has the highest return rate according to our sales data?"}
+
+  \vspace{0.4em}
+  \textit{"Compare our headcount from January to today and flag any departments that grew by more than 20 percent."}
+\end{highlight}
+
+\vspace{0.4em}
+dedomena reads across all connected sources at once, finds the relevant information,
+and writes a clear answer with references to where the data came from.
+
+\subsection{Step three: Act on the results}
+
+The platform does not just return a number. It explains what it found, flags
+anything that looks unusual, and can present the information as a summary,
+a table, or a list, depending on what is most useful.
+
+This gives the person asking the question everything they need to make a decision
+or take action, without needing to open a single spreadsheet.
+
+% ── 4. Who benefits and how ───────────────────────────────────────────────────
+\section{Who Benefits and How}
+
+\begin{tabular}{>{\bfseries\color{darkgray}}p{3.5cm} p{10.5cm}}
+  \toprule
+  \textbf{Role} & \textbf{What changes for them} \\
+  \midrule
+  Managers and directors
+  &
+  They get answers to operational questions in under a minute instead of waiting
+  for a report. They can monitor performance, compare periods, and spot trends
+  without involving the data team. \\[8pt]
+
+  Sales and account teams
+  &
+  They can pull up customer history, deal status, and account health instantly,
+  directly from the CRM and financial data, without needing a dashboard that
+  someone else built. \\[8pt]
+
+  Operations teams
+  &
+  They can query inventory levels, supplier data, and process metrics across
+  multiple systems at once and get a combined view in one place. \\[8pt]
+
+  Finance teams
+  &
+  They can cross-reference accounting exports with other business data and ask
+  questions like \textit{"which cost centres are over budget this quarter?"} without
+  writing a single formula. \\[8pt]
+
+  Analysts and developers
+  &
+  They stop being the first point of contact for every data question. They can
+  focus on deeper work while the rest of the organisation handles routine queries
+  independently. \\
+  \bottomrule
+\end{tabular}
+
+% ── 5. What makes it different ────────────────────────────────────────────────
+\section{What Makes It Different from Other Tools}
+
+\subsection{It understands questions, not just keywords}
+
+Most search tools and dashboards require you to know exactly what you are looking
+for and where it is stored. dedomena understands the meaning of a question and
+figures out which data is relevant on its own. You do not need to know which database
+table holds the answer.
+
+\subsection{It works across multiple sources at once}
+
+A standard BI tool answers questions about one dataset at a time. dedomena can read
+from five different connected sources simultaneously and combine them into a single
+answer. If the answer requires data from both the CRM and the finance system,
+it finds it in both and gives you one coherent response.
+
+\subsection{The data stays with us}
+
+This is important from a compliance standpoint. dedomena does not upload your raw
+data to any external server. When a question is asked, only the portions of the
+data that are relevant to that specific question are sent to the AI to generate the
+answer. The rest stays in place.
+
+\subsection{No training or technical knowledge required}
+
+Any member of the team can use it from day one. There is no query language to learn,
+no dashboard to configure, and no report template to fill in. If you can type a
+question in plain English, you can use dedomena.
+
+% ── 6. What we get as an organisation ────────────────────────────────────────
+\section{What We Get as an Organisation}
+
+\begin{enumerate}[leftmargin=1.6em, itemsep=8pt]
+
+  \item \textbf{Faster decision-making.}
+  Questions that used to take days to answer take seconds.
+  Teams can act on information while it is still relevant.
+
+  \item \textbf{Less dependency on technical staff for routine questions.}
+  Analysts and developers are freed from handling basic data requests.
+  They spend their time on work that actually requires their skills.
+
+  \item \textbf{One place to ask questions about all of our data.}
+  Instead of logging into five different tools and exporting five spreadsheets,
+  everyone queries through one interface.
+
+  \item \textbf{A full record of what was asked and when.}
+  Every question is logged with the sources it used.
+  This creates a natural audit trail for any data-driven decision.
+
+  \item \textbf{Better data literacy across the organisation.}
+  When people can ask questions directly, they engage with data more often.
+  Over time, this builds a culture where decisions are grounded in evidence.
+
+\end{enumerate}
+
+% ── 7. Rollout plan ───────────────────────────────────────────────────────────
+\section{Suggested Rollout Plan}
+
+\begin{tabular}{>{\bfseries\color{darkgray}}p{2.5cm} p{11.5cm}}
+  \toprule
+  \textbf{Phase} & \textbf{What happens} \\
+  \midrule
+  Phase 1
+  &
+  Connect two or three of our most-used data sources. Run a two-week pilot with
+  a small group of managers and team leads. Gather feedback on which questions
+  they ask most often and whether the answers are accurate and useful. \\[8pt]
+
+  Phase 2
+  &
+  Expand to the full list of data sources. Open access to all teams.
+  Run a short onboarding session so that everyone knows how to ask a well-formed
+  question and how to interpret the answers. \\[8pt]
+
+  Phase 3
+  &
+  Use the query history to identify the most common information needs across the
+  organisation. Build standing summaries or scheduled reports for those use cases
+  so that key information is always ready without anyone needing to ask. \\
+  \bottomrule
+\end{tabular}
+
+% ── 8. Summary ────────────────────────────────────────────────────────────────
+\section{Summary}
+
+dedomena gives our organisation the ability to ask any question about our data and
+get a clear, reliable answer in seconds, without writing code, without waiting for
+a report, and without needing to know where the data lives.
+
+We will use it to reduce the time between a question and a decision, to remove the
+bottleneck that currently sits on our analytics team, and to give every member of
+the team direct access to the information they need to do their job well.
+
+\begin{callout}
+  \textbf{The goal is simple:} anyone in the organisation should be able to open
+  dedomena, type a question about our business, and have a clear answer in front
+  of them before their coffee gets cold.
+\end{callout}
+
+\vspace{2em}
+\textcolor{mutedtext}{\small This document is intended for internal review. For a live demonstration
+or to discuss integration with our existing tools, please reach out to the product team.}
+
+\end{document}
