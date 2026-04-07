@@ -1,0 +1,541 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[margin=2.4cm, top=2.8cm, bottom=2.8cm]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{shapes.geometric, shapes.rounded, arrows.meta, positioning,
+                fit, backgrounds, shadows.blur, calc}
+
+% ── Colors ────────────────────────────────────────────────────────────────────
+\definecolor{accent}{RGB}{94, 106, 210}
+\definecolor{accentlight}{RGB}{220, 223, 245}
+\definecolor{lightgray}{RGB}{245, 246, 248}
+\definecolor{darkgray}{RGB}{50, 55, 70}
+\definecolor{mutedtext}{RGB}{110, 115, 135}
+\definecolor{csource}{RGB}{167, 139, 250}
+\definecolor{cengine}{RGB}{94, 106, 210}
+\definecolor{coutput}{RGB}{52, 211, 153}
+\definecolor{cdanger}{RGB}{239, 68, 68}
+\definecolor{cokay}{RGB}{34, 197, 94}
+\definecolor{camber}{RGB}{245, 158, 11}
+
+% ── Hyperref ──────────────────────────────────────────────────────────────────
+\hypersetup{colorlinks=true, linkcolor=accent, urlcolor=accent,
+            pdftitle={dedomena -- Presentation Produit}}
+
+% ── Section styles ────────────────────────────────────────────────────────────
+\titleformat{\section}
+  {\large\bfseries\color{darkgray}}{}{}{}
+  [\vspace{-0.3em}\textcolor{accent}{\rule{\linewidth}{1.5pt}}\vspace{0.4em}]
+\titleformat{\subsection}{\normalsize\bfseries\color{darkgray}}{}{}{}
+\titlespacing{\section}{0pt}{1.8em}{0.6em}
+\titlespacing{\subsection}{0pt}{1.2em}{0.3em}
+
+% ── Header / footer ───────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{mutedtext}{dedomena \textsigma}}
+\fancyhead[R]{\small\textcolor{mutedtext}{Presentation produit}}
+\fancyfoot[C]{\small\textcolor{mutedtext}{\thepage}}
+\renewcommand{\headrulewidth}{0pt}
+
+% ── Callout boxes ─────────────────────────────────────────────────────────────
+\newmdenv[backgroundcolor=lightgray, linecolor=accent, linewidth=3pt,
+          topline=false, bottomline=false, rightline=false,
+          innerleftmargin=14pt, innerrightmargin=14pt,
+          innertopmargin=10pt, innerbottommargin=10pt,
+          skipabove=10pt, skipbelow=10pt]{callout}
+
+\newmdenv[backgroundcolor=accent!7, linecolor=accent!35, linewidth=1pt,
+          roundcorner=5pt, innerleftmargin=14pt, innerrightmargin=14pt,
+          innertopmargin=10pt, innerbottommargin=10pt,
+          skipabove=10pt, skipbelow=10pt]{highlight}
+
+% ── TikZ styles ───────────────────────────────────────────────────────────────
+\tikzset{
+  box/.style={
+    rectangle, rounded corners=6pt,
+    draw=#1!60, fill=#1!10, text=#1!80!black,
+    minimum height=1.0cm, text centered,
+    font=\small\bfseries, inner sep=8pt,
+    drop shadow={shadow xshift=1pt, shadow yshift=-1pt,
+                 fill=#1!20, opacity=0.5}
+  },
+  arr/.style={-{Stealth[length=6pt]}, thick, color=#1,
+              shorten >=2pt, shorten <=2pt},
+  alabel/.style={font=\scriptsize\itshape, text=mutedtext,
+                 fill=white, inner sep=2pt, midway, sloped=false},
+}
+
+% ── Document ──────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── Page de couverture ────────────────────────────────────────────────────────
+\thispagestyle{empty}
+\begin{center}
+  \vspace*{1.4cm}
+  {\fontsize{36}{42}\selectfont\bfseries\color{darkgray} dedomena}
+  \hspace{0.4em}
+  {\fontsize{36}{42}\selectfont\color{accent!45}\textsigma}
+
+  \vspace{0.6em}
+  {\large\color{mutedtext} Une facon plus intelligente de travailler avec vos donnees}
+
+  \vspace{1.6em}
+  \textcolor{accent!30}{\rule{7cm}{0.6pt}}
+
+  \vspace{1em}
+  {\small\color{mutedtext}
+    Presentation produit \quad\textbullet\quad Document interne \quad\textbullet\quad \today
+  }
+  \vspace{0.6cm}
+
+  % Diagramme de couverture
+  \begin{tikzpicture}[node distance=0.8cm and 1.1cm]
+    \node[box=csource, minimum width=3.2cm] (src) {Vos donnees};
+    \node[box=cengine, minimum width=3.2cm, right=of src] (eng) {dedomena};
+    \node[box=coutput, minimum width=3.2cm, right=of eng] (out) {Reponse claire};
+
+    \draw[arr=csource] (src) -- (eng)
+      node[alabel, above] {connecte};
+    \draw[arr=cengine] (eng) -- (out)
+      node[alabel, above] {livre};
+
+    \node[font=\scriptsize\color{mutedtext}, below=0.35cm of src]
+      {100+ sources};
+    \node[font=\scriptsize\color{mutedtext}, below=0.35cm of eng]
+      {raisonnement IA};
+    \node[font=\scriptsize\color{mutedtext}, below=0.35cm of out]
+      {en quelques secondes};
+  \end{tikzpicture}
+
+  \vspace{1.6cm}
+\end{center}
+\newpage
+
+% ── 1. Qu'est-ce que dedomena ─────────────────────────────────────────────────
+\section{Qu'est-ce que dedomena?}
+
+dedomena est une plateforme web qui permet a n'importe qui dans l'organisation
+de poser des questions sur les donnees de l'entreprise en francais courant et
+d'obtenir des reponses claires et sourcees en quelques secondes.
+
+Pas de SQL. Pas de formules Excel. Pas d'attente pour qu'un analyste produise
+un rapport. Vous connectez vos sources de donnees une seule fois, vous tapez
+votre question, et la plateforme fait le reste.
+
+\begin{callout}
+  \textbf{Pensez-y comme si vous aviez un assistant tres competent qui a lu
+  tous les tableaux, toutes les bases de donnees et tous les rapports de
+  l'entreprise, et qui est toujours disponible pour repondre instantanement
+  a n'importe quelle question.}
+\end{callout}
+
+
+% ── 2. Le probleme ────────────────────────────────────────────────────────────
+\section{Le probleme que nous resolvons}
+
+\subsection{L'ancienne methode est trop lente}
+
+Obtenir une reponse a partir des donnees implique aujourd'hui trop d'etapes
+et trop de personnes. Le diagramme ci-dessous montre ce a quoi ressemble
+une demande typique en ce moment.
+
+\vspace{0.6em}
+\begin{center}
+\begin{tikzpicture}[node distance=0.5cm and 0.7cm,
+    step/.style={rectangle, rounded corners=4pt, draw=cdanger!50,
+                 fill=cdanger!8, text=cdanger!80!black, font=\small,
+                 minimum height=0.85cm, minimum width=3.2cm,
+                 text centered, inner sep=6pt},
+    wait/.style={font=\scriptsize\itshape\color{mutedtext},
+                 fill=white, inner sep=2pt}]
+
+  \node[step] (s1) {Le directeur a besoin d'un chiffre};
+  \node[step, right=of s1] (s2) {Il contacte l'analyste};
+  \node[step, right=of s2] (s3) {L'analyste cherche les donnees};
+  \node[step, below=of s3]  (s4) {L'analyste redige une requete};
+  \node[step, left=of s4]   (s5) {Il formate un rapport};
+  \node[step, left=of s5]   (s6) {Le directeur recoit la reponse};
+
+  \draw[arr=cdanger] (s1)--(s2);
+  \draw[arr=cdanger] (s2)--(s3) node[wait, above]{1 a 2 jours};
+  \draw[arr=cdanger] (s3)--(s4);
+  \draw[arr=cdanger] (s4)--(s5) node[wait, above]{plusieurs heures};
+  \draw[arr=cdanger] (s5)--(s6);
+
+  \node[font=\scriptsize\bfseries\color{cdanger},
+        below=0.7cm of s5, xshift=1.5cm]
+    {Temps total : 1 a 3 jours pour une seule question};
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
+C'est trop lent. Cela cree un goulot d'etranglement sur un petit nombre de
+personnes techniques, et les decisions sont prises sans les informations
+qui existent pourtant deja dans l'organisation.
+
+\subsection{Les donnees sont dispersees partout}
+
+Au-dela de la lenteur, un second probleme est que les donnees sont eparpillees.
+Aucun outil ne donne une vue d'ensemble, ce qui signifie que chaque question
+transversale necessite un travail manuel important.
+
+\vspace{0.6em}
+\begin{center}
+\begin{tikzpicture}[
+    silo/.style={rectangle, rounded corners=5pt,
+                 draw=mutedtext!50, fill=lightgray,
+                 font=\small, minimum width=2.4cm, minimum height=0.9cm,
+                 text centered, inner sep=6pt, text=darkgray},
+    question/.style={ellipse, draw=cdanger!60, fill=cdanger!8,
+                     font=\small\itshape, text=cdanger!80!black,
+                     inner sep=8pt}]
+
+  \node[silo] (crm)  at (0,0)     {CRM};
+  \node[silo] (fin)  at (2.8,0)   {Finances};
+  \node[silo] (ops)  at (5.6,0)   {Operations};
+  \node[silo] (rh)   at (8.4,0)   {RH};
+  \node[silo] (files)at (4.2,-1.6){Tableurs};
+
+  \node[question] (q) at (4.2, -3.2)
+    {"Quelle region a cru le plus vite ce trimestre?"};
+
+  \foreach \n in {crm, fin, ops, rh, files}{
+    \draw[thick, dashed, color=mutedtext!50] (\n) -- (q);
+  }
+
+  \node[font=\scriptsize\color{mutedtext}, below=0.25cm of q]
+    {Aucun outil ne peut repondre seul. Quelqu'un doit extraire les donnees de chacun manuellement.};
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
+
+% ── 3. Comment nous allons utiliser dedomena ──────────────────────────────────
+\section{Comment nous allons utiliser dedomena}
+
+\subsection{La nouvelle methode : une question, une reponse}
+
+Avec dedomena, la meme demande qui prenait des jours ne prend plus que quelques
+secondes. Le processus entier se reduit a trois etapes.
+
+\vspace{0.6em}
+\begin{center}
+\begin{tikzpicture}[node distance=1.0cm and 1.4cm,
+    step/.style={rectangle, rounded corners=6pt,
+                 draw=cokay!60, fill=cokay!8, text=cokay!80!black,
+                 font=\small\bfseries, minimum height=1.0cm,
+                 minimum width=3.8cm, text centered, inner sep=8pt,
+                 drop shadow={shadow xshift=1pt, shadow yshift=-1pt,
+                              fill=cokay!20, opacity=0.4}}]
+
+  \node[step] (a) {Poser une question};
+  \node[step, right=of a] (b) {dedomena lit toutes les sources};
+  \node[step, right=of b] (c) {Reponse livree};
+
+  \draw[arr=cokay] (a)--(b)
+    node[midway, above, font=\scriptsize\itshape\color{mutedtext}]{instantanement};
+  \draw[arr=cokay] (b)--(c)
+    node[midway, above, font=\scriptsize\itshape\color{mutedtext}]{en secondes};
+
+  \node[font=\scriptsize\bfseries\color{cokay},
+        below=0.7cm of b]{Temps total : moins de 30 secondes};
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
+\subsection{Etape 1 : connecter nos sources de donnees}
+
+Nous connectons les outils et bases de donnees que nous utilisons deja. Il s'agit
+d'une configuration unique qui prend quelques minutes par source. Une fois
+connectees, dedomena garde les donnees disponibles pour les questions. Rien n'est
+envoye a un tiers. Tout reste dans notre environnement.
+
+\vspace{0.8em}
+\begin{center}
+\begin{tikzpicture}[
+    cat/.style={rectangle, rounded corners=5pt,
+                draw=csource!50, fill=csource!8,
+                font=\small\bfseries, text=csource!80!black,
+                minimum width=3.2cm, minimum height=0.85cm,
+                text centered, inner sep=8pt},
+    eng/.style={rectangle, rounded corners=8pt,
+                draw=cengine!60, fill=cengine!12,
+                font=\normalsize\bfseries, text=cengine!80!black,
+                minimum width=2.6cm, minimum height=3.8cm,
+                text centered, inner sep=10pt,
+                drop shadow={shadow xshift=1.5pt, shadow yshift=-1.5pt,
+                             fill=cengine!25, opacity=0.5}},
+    arr/.style={-{Stealth[length=5pt]}, thick, color=csource!60}]
+
+  \node[cat] (crm)   at (0,  2.4) {CRM};
+  \node[cat] (db)    at (0,  1.2) {Bases de donnees};
+  \node[cat] (files) at (0,  0.0) {Fichiers};
+  \node[cat] (cloud) at (0, -1.2) {Stockage cloud};
+  \node[cat] (fin)   at (0, -2.4) {Finances};
+
+  \node[eng] (eng) at (4.6, 0) {dedomena};
+
+  \node[rectangle, rounded corners=6pt,
+        draw=coutput!60, fill=coutput!10,
+        font=\small\bfseries, text=coutput!80!black,
+        minimum width=2.8cm, minimum height=1.2cm,
+        text centered, inner sep=10pt,
+        drop shadow={shadow xshift=1pt, shadow yshift=-1pt,
+                     fill=coutput!25, opacity=0.4}]
+       (out) at (8.6, 0) {Votre reponse};
+
+  \foreach \s in {crm, db, files, cloud, fin}{
+    \draw[arr] (\s) -- (eng);
+  }
+
+  \draw[-{Stealth[length=6pt]}, thick, color=cengine!70] (eng) -- (out)
+    node[midway, above, font=\scriptsize\itshape\color{mutedtext}]{en secondes};
+
+  \node[font=\scriptsize\color{mutedtext}, below=0.3cm of fin]
+    {Plus de 100 sources supportees};
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
+\subsection{Etape 2 : poser des questions en langage naturel}
+
+N'importe quel membre de l'equipe ayant acces a la plateforme ouvre dedomena,
+tape une question et recoit une reponse. Voici des exemples realistes de ce que
+nous pourrions ecrire:
+
+\begin{highlight}
+  \textit{"Quels sont nos cinq meilleurs comptes en chiffre d'affaires le trimestre dernier?"}
+
+  \vspace{0.4em}
+  \textit{"Donne-moi un resume de tous les tickets d'assistance ouverts ce mois-ci."}
+
+  \vspace{0.4em}
+  \textit{"Quelle gamme de produits a le taux de retour le plus eleve selon nos donnees de vente?"}
+
+  \vspace{0.4em}
+  \textit{"Compare nos effectifs de janvier a aujourd'hui et signale les departements
+           qui ont cru de plus de 20 pour cent."}
+\end{highlight}
+
+dedomena lit toutes les sources connectees simultanement, trouve les informations
+pertinentes et redige une reponse claire avec des references indiquant d'ou
+viennent les donnees.
+
+\subsection{Etape 3 : agir sur les resultats}
+
+La plateforme ne retourne pas seulement un chiffre. Elle explique ce qu'elle a
+trouve, signale les anomalies et presente les informations sous forme de resume,
+de tableau ou de liste, selon ce qui est le plus utile. La personne qui pose la
+question dispose de tout ce dont elle a besoin pour prendre une decision sans
+ouvrir un seul tableur.
+
+
+% ── 4. Qui en beneficie ───────────────────────────────────────────────────────
+\section{Qui en beneficie et comment}
+
+\vspace{0.4em}
+\begin{center}
+\begin{tikzpicture}[
+    role/.style={rectangle, rounded corners=6pt,
+                 draw=cengine!40, fill=cengine!7,
+                 font=\small\bfseries, text=darkgray,
+                 minimum width=2.8cm, minimum height=0.85cm,
+                 text centered, inner sep=8pt},
+    gain/.style={rectangle, rounded corners=4pt,
+                 draw=coutput!40, fill=coutput!7,
+                 font=\scriptsize, text=darkgray,
+                 minimum width=5.4cm, text width=5.2cm,
+                 inner sep=7pt},
+    conn/.style={-{Stealth[length=5pt]}, thick, color=mutedtext!60}]
+
+  \node[role] (mgr)   at (0,  3.0) {Direction};
+  \node[role] (sales) at (0,  1.5) {Ventes};
+  \node[role] (ops)   at (0,  0.0) {Operations};
+  \node[role] (fin)   at (0, -1.5) {Finances};
+  \node[role] (data)  at (0, -3.0) {Analystes};
+
+  \node[gain] (gmgr)  at (7.6,  3.0)
+    {Reponses instantanees aux questions de performance. Plus d'attente pour les rapports.};
+  \node[gain] (gsales)at (7.6,  1.5)
+    {Historique client et sante des comptes disponibles en un instant.};
+  \node[gain] (gops)  at (7.6,  0.0)
+    {Une vue combinee des stocks, fournisseurs et donnees de processus en un seul endroit.};
+  \node[gain] (gfin)  at (7.6, -1.5)
+    {Croisement des donnees financieres et detection des depassements sans formules.};
+  \node[gain] (gdata) at (7.6, -3.0)
+    {Liberes des demandes de donnees routinieres. Concentres sur l'analyse a forte valeur ajoutee.};
+
+  \foreach \r/\g in {mgr/gmgr, sales/gsales, ops/gops, fin/gfin, data/gdata}{
+    \draw[conn] (\r) -- (\g);
+  }
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
+
+% ── 5. Ce qui le distingue ────────────────────────────────────────────────────
+\section{Ce qui le distingue des autres outils}
+
+\vspace{0.6em}
+\begin{center}
+\begin{tikzpicture}[
+    col/.style={rectangle, rounded corners=6pt,
+                draw=#1!50, fill=#1!8,
+                minimum width=5.6cm, text width=5.4cm,
+                inner sep=12pt, font=\small, text=#1!80!black}]
+
+  \node[font=\small\bfseries\color{cdanger!80}] at (0, 0)   {Sans dedomena};
+  \node[font=\small\bfseries\color{cokay!80}]   at (7.4, 0) {Avec dedomena};
+
+  \draw[thick, dashed, color=mutedtext!40] (3.7, 0.5) -- (3.7, -7.8);
+
+  \foreach \y/\bad/\good in {
+    -1.0/{Attendre 1 a 3 jours pour une reponse}/{Reponse en moins de 30 secondes},
+    -2.6/{Un tableau de bord a la fois}/{Lit toutes les sources simultanement},
+    -4.2/{Necessite SQL ou Excel}/{Questions en francais courant uniquement},
+    -5.8/{L'analyste est le goulot d'etranglement}/{N'importe quel membre peut poser une question},
+    -7.4/{Donnees dispersees dans 10 outils}/{Un seul endroit pour toutes les questions}
+  }{
+    \node[col=cdanger, align=left] at (0, \y)   {\bad};
+    \node[col=cokay,   align=left] at (7.4, \y) {\good};
+    \node[font=\large\color{accent}] at (3.7, \y) {$\rightarrow$};
+  }
+
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
+\subsection{Les donnees restent chez nous}
+
+C'est essentiel du point de vue de la conformite. dedomena ne telecharge pas vos
+donnees brutes vers un serveur externe. Lorsqu'une question est posee, seules les
+parties des donnees pertinentes pour cette question specifique sont envoyees a
+l'intelligence artificielle pour generer la reponse. Le reste reste en place,
+dans notre environnement.
+
+
+% ── 6. Ce que nous y gagnons ──────────────────────────────────────────────────
+\section{Ce que nous y gagnons en tant qu'organisation}
+
+\begin{enumerate}[leftmargin=1.6em, itemsep=8pt]
+  \item \textbf{Des decisions plus rapides.}
+  Les questions qui prenaient des jours ne prennent plus que quelques secondes.
+  Les equipes agissent sur l'information pendant qu'elle est encore d'actualite.
+
+  \item \textbf{Moins de dependance envers le personnel technique pour les questions courantes.}
+  Les analystes sont liberes des demandes de donnees basiques.
+  Ils concentrent leur temps sur des travaux qui necessitent reellement leurs competences.
+
+  \item \textbf{Un seul endroit pour interroger toutes nos donnees.}
+  Au lieu de se connecter a cinq outils differents et d'exporter cinq tableurs,
+  tout le monde passe par une seule interface.
+
+  \item \textbf{Un historique complet de ce qui a ete demande et quand.}
+  Chaque question est enregistree avec les sources utilisees, creant une piste
+  d'audit naturelle pour toute decision basee sur les donnees.
+
+  \item \textbf{Une meilleure culture de la donnee dans l'organisation.}
+  Quand les gens peuvent poser des questions directement, ils s'engagent plus
+  souvent avec les donnees. Avec le temps, cela construit une culture ou les
+  decisions sont fondees sur des preuves.
+\end{enumerate}
+
+
+% ── 7. Plan de deploiement ────────────────────────────────────────────────────
+\section{Plan de deploiement suggere}
+
+\vspace{0.8em}
+\begin{center}
+\begin{tikzpicture}[
+    phase/.style={rectangle, rounded corners=6pt,
+                  draw=#1!60, fill=#1!10,
+                  minimum width=4.0cm, text width=3.8cm,
+                  inner sep=12pt, font=\small, text=darkgray,
+                  drop shadow={shadow xshift=1pt, shadow yshift=-1pt,
+                               fill=#1!20, opacity=0.45}},
+    badge/.style={circle, draw=#1!60, fill=#1!15,
+                  font=\small\bfseries, text=#1!80!black,
+                  minimum size=0.9cm},
+    phaseconn/.style={-{Stealth[length=6pt]}, thick, color=mutedtext!50}]
+
+  \node[phase=camber] (p1) at (0, 0) {
+    \textbf{Phase 1 : Pilote}\\[4pt]
+    Connecter 2 ou 3 sources cles.\\
+    Test de 2 semaines avec les directeurs et responsables d'equipe.\\
+    Recueillir les retours.
+  };
+
+  \node[phase=cengine] (p2) at (5.2, 0) {
+    \textbf{Phase 2 : Deploiement}\\[4pt]
+    Connecter toutes les sources.\\
+    Ouvrir l'acces a toutes les equipes.\\
+    Session de formation courte.
+  };
+
+  \node[phase=coutput] (p3) at (10.4, 0) {
+    \textbf{Phase 3 : Optimisation}\\[4pt]
+    Analyser les questions les plus frequentes.\\
+    Construire des resumes permanents pour les besoins recurrents.
+  };
+
+  \draw[thick, color=mutedtext!40] (-2, -1.8) -- (12.4, -1.8);
+
+  \node[badge=camber]  at (0,    -1.8) {1};
+  \node[badge=cengine] at (5.2,  -1.8) {2};
+  \node[badge=coutput] at (10.4, -1.8) {3};
+
+  \node[font=\scriptsize\color{mutedtext}] at (0,    -2.55) {Semaines 1 et 2};
+  \node[font=\scriptsize\color{mutedtext}] at (5.2,  -2.55) {Mois 2};
+  \node[font=\scriptsize\color{mutedtext}] at (10.4, -2.55) {Mois 3 et au-dela};
+
+  \draw[phaseconn] (p1) -- (p2);
+  \draw[phaseconn] (p2) -- (p3);
+
+\end{tikzpicture}
+\end{center}
+\vspace{0.4em}
+
+
+% ── 8. En resume ──────────────────────────────────────────────────────────────
+\section{En resume}
+
+dedomena donne a notre organisation la capacite de poser n'importe quelle question
+sur nos donnees et d'obtenir une reponse claire et fiable en quelques secondes,
+sans ecrire de code, sans attendre un rapport, et sans avoir besoin de savoir ou
+se trouvent les donnees.
+
+Nous allons l'utiliser pour reduire le temps entre une question et une decision,
+pour supprimer le goulot d'etranglement qui repose aujourd'hui sur notre equipe
+d'analyse, et pour donner a chaque membre de l'equipe un acces direct aux
+informations dont il a besoin pour bien faire son travail.
+
+\begin{callout}
+  \textbf{L'objectif est simple :} n'importe qui dans l'organisation doit pouvoir
+  ouvrir dedomena, taper une question sur notre activite, et avoir une reponse
+  claire devant lui avant que son cafe ne refroidisse.
+\end{callout}
+
+\vspace{2em}
+\textcolor{mutedtext}{\small Ce document est destine a un usage interne. Pour une
+demonstration en direct ou pour discuter de l'integration avec nos outils existants,
+veuillez contacter l'equipe produit.}
+
+\end{document}
