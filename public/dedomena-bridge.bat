@@ -1,37 +1,37 @@
 @echo off
-title dedomena bridge
+title dedomena bridge v3
 cd /d "%USERPROFILE%\Downloads"
 
 echo.
 echo  ==========================================
-echo   dedomena bridge  ^|  local search agent
+echo   dedomena bridge  v3  ^|  starting...
 echo  ==========================================
 echo.
 
-:: Check Node.js is installed
+:: Check Node.js
 where node >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo  ERROR: Node.js is not installed.
-    echo  Download it from https://nodejs.org ^(LTS version^) and re-run this.
+    echo  Download it free from https://nodejs.org (LTS version^).
     echo.
     pause
     exit /b 1
 )
 
-:: Download bridge script if it's not already here
+:: Always re-download to get the latest version
+echo  Downloading latest bridge (v3^)...
+powershell -Command "Invoke-WebRequest -Uri 'https://dedomena.vercel.app/dedomena-bridge.js' -OutFile '%USERPROFILE%\Downloads\dedomena-bridge.js' -UseBasicParsing" >nul 2>&1
+
 if not exist "%USERPROFILE%\Downloads\dedomena-bridge.js" (
-    echo  Downloading bridge script...
-    powershell -Command "Invoke-WebRequest -Uri 'https://dedomena.vercel.app/dedomena-bridge.js' -OutFile '%USERPROFILE%\Downloads\dedomena-bridge.js'" >nul 2>&1
-    if not exist "%USERPROFILE%\Downloads\dedomena-bridge.js" (
-        echo  Download failed. Please download dedomena-bridge.js manually from the app.
-        pause
-        exit /b 1
-    )
-    echo  Done.
-    echo.
+    echo  Download failed. Check your internet connection.
+    pause
+    exit /b 1
 )
 
-:: Run the bridge
+echo  Ready.
+echo.
+
+:: Run
 node "%USERPROFILE%\Downloads\dedomena-bridge.js" %*
 
 echo.

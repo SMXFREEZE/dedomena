@@ -656,7 +656,7 @@ function DesktopBridgeForm({ name, setName, onAdd, onBack }: any) {
         {status === 'ok' && (
           <div className="flex items-center gap-2 text-emerald-400 text-[11px]">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Bridge is live — root: <code className="font-mono text-white/50 text-[10px]">{rootPath}</code>
+            Bridge is live · root: <code className="font-mono text-white/45 text-[10px]">{rootPath}</code>
           </div>
         )}
         {status === 'error' && (
