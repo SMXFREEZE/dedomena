@@ -6,7 +6,6 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { IntelligenceView } from "@/components/views/intelligence-view";
 import { EngineerView } from "@/components/views/engineer-view";
 import { AnalystView } from "@/components/views/analyst-view";
-import { ArchitectureView } from "@/components/views/architecture-view";
 import { AddSourceModal } from "@/components/modals/add-source-modal";
 import { SettingsModal } from "@/components/modals/settings-modal";
 import { useAppStore, ContentStorage } from "@/store";
@@ -77,7 +76,6 @@ export default function Home() {
           {activeTab === "intelligence" && <IntelligenceView key="intel" />}
           {activeTab === "engineer" && <EngineerView key="eng" />}
           {activeTab === "analyst" && <AnalystView key="data" />}
-          {activeTab === "architecture" && <ArchitectureView key="arch" />}
         </AnimatePresence>
       </main>
       <AddSourceModal isOpen={showAddSource} onClose={() => setShowAddSource(false)} />
