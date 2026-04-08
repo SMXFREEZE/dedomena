@@ -144,7 +144,7 @@ function streamOpenAIToText(body: ReadableStream<Uint8Array>): ReadableStream<Ui
 
 export async function POST(req: NextRequest) {
   try {
-    const { query, sourcesData, systemPrompt, mode, selectedSourceIds } = await req.json();
+    const { query, sourcesData, systemPrompt, mode, selectedSourceIds, chatHistory } = await req.json();
 
     const provider    = process.env.AI_PROVIDER ?? "anthropic";
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -215,6 +215,21 @@ export async function POST(req: NextRequest) {
         headers["anthropic-beta"] = "pdfs-2024-09-25,files-api-2025-04-14";
       }
 
+      // Build messages array with conversation history for multi-turn chat
+      const apiMessages: any[] = [];
+      if (isChat && Array.isArray(chatHistory) && chatHistory.length > 0) {
+        // Include up to last 10 turns of history to stay within limits
+        const recent = chatHistory.slice(-20);
+        for (const msg of recent) {
+          apiMessages.push({
+            role: msg.role,
+            content: typeof msg.content === "string" ? msg.content : "",
+          });
+        }
+      }
+      // Current user message with source context
+      apiMessages.push({ role: "user", content: userContent });
+
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers,
@@ -222,7 +237,7 @@ export async function POST(req: NextRequest) {
           model,
           max_tokens: isChat ? 16000 : 8192,
           system: sys,
-          messages: [{ role: "user", content: userContent }],
+          messages: apiMessages,
           stream: isChat,
         }),
       });
@@ -260,12 +275,20 @@ export async function POST(req: NextRequest) {
     }
     openAiContent.push({ type: "text", text: `QUERY: ${query}` });
 
+    const openAiMessages: any[] = [{ role: "system", content: sys }];
+    if (isChat && Array.isArray(chatHistory) && chatHistory.length > 0) {
+      for (const msg of chatHistory.slice(-20)) {
+        openAiMessages.push({ role: msg.role, content: msg.content ?? "" });
+      }
+    }
+    openAiMessages.push({ role: "user", content: openAiContent });
+
     const openRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${openaiKey}` },
       body: JSON.stringify({
         model,
-        messages: [{ role: "system", content: sys }, { role: "user", content: openAiContent }],
+        messages: openAiMessages,
         max_tokens: isChat ? 16000 : 8192,
         stream: isChat,
         ...(!isChat ? { response_format: { type: "json_object" } } : {}),

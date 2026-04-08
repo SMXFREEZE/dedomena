@@ -14,6 +14,8 @@ import {
 import { useAppStore, ContentStorage } from "@/store";
 import { toast } from "sonner";
 import { cn, fmtChars } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Mode = "structured" | "chat";
 
@@ -242,6 +244,11 @@ export function IntelligenceView() {
 
       const selectedSourceIds = selectedIds.size > 0 ? [...selectedIds] : undefined;
 
+      // Build conversation history for multi-turn context (chat mode only)
+      const chatHistory = effectiveMode === "chat" && messages.length > 0
+        ? messages.filter(m => !m.streaming).map(m => ({ role: m.role, content: m.content }))
+        : undefined;
+
       const res = await fetch("/api/synthesize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -251,6 +258,7 @@ export function IntelligenceView() {
           systemPrompt: settings.systemPrompt,
           mode: effectiveMode,
           selectedSourceIds,
+          chatHistory,
         }),
       });
 
@@ -532,7 +540,9 @@ export function IntelligenceView() {
                             </div>
                             {!msg.streaming && <CopyButton text={msg.content} />}
                           </div>
-                          <p className="text-[13px] text-white/80 leading-relaxed whitespace-pre-wrap tracking-[-0.01em]">{msg.content}</p>
+                          <div className="prose-chat text-[13px] text-white/80 leading-relaxed tracking-[-0.01em]">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                          </div>
                         </GlassCard>
                         {!msg.streaming && msg.hits && msg.hits.length > 0 && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -605,7 +615,9 @@ export function IntelligenceView() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-white/80 leading-relaxed text-[15px] whitespace-pre-wrap">{structuredResult.summary}</p>
+                    <div className="prose-chat text-white/80 leading-relaxed text-[15px]">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{structuredResult.summary}</ReactMarkdown>
+                    </div>
                   </GlassCard>
 
                   {structuredResult.hits?.length > 0 && (
