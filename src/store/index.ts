@@ -18,11 +18,16 @@ export interface DataSourceMeta {
 }
 
 export interface AppSettings {
-  provider: "anthropic" | "openai";
-  apiKey: string;
-  model: string;
   systemPrompt: string;
-  maxTokens: number;
+  activePreset: string;
+}
+
+export interface NotepadEntry {
+  id: string;
+  title: string;
+  content: string;
+  sourceQuery?: string;
+  createdAt: string;
 }
 
 export interface QueryRecord {
@@ -37,6 +42,7 @@ interface AppState {
   sources: DataSourceMeta[];
   settings: AppSettings;
   queryHistory: QueryRecord[];
+  notepad: NotepadEntry[];
 
   addSourceMeta: (meta: Omit<DataSourceMeta, "id" | "dateAdded" | "status"> & { id?: string }) => void;
   updateSourceMeta: (id: string, patch: Partial<DataSourceMeta>) => void;
@@ -44,6 +50,9 @@ interface AppState {
   updateSettings: (settings: Partial<AppSettings>) => void;
   addQueryRecord: (record: Omit<QueryRecord, "id">) => void;
   clearHistory: () => void;
+  addNote: (note: Omit<NotepadEntry, "id" | "createdAt">) => void;
+  removeNote: (id: string) => void;
+  updateNote: (id: string, patch: Partial<NotepadEntry>) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -52,11 +61,8 @@ export const useAppStore = create<AppState>()(
       sources: [],
       queryHistory: [],
       settings: {
-        provider: "anthropic",
-        apiKey: "",
-        model: "claude-sonnet-4-6",
         systemPrompt: "",
-        maxTokens: 16000,
+        activePreset: "default",
       },
 
       addSourceMeta: (meta) => set((state) => ({
@@ -88,6 +94,20 @@ export const useAppStore = create<AppState>()(
       })),
 
       clearHistory: () => set({ queryHistory: [] }),
+
+      notepad: [],
+
+      addNote: (note) => set((state) => ({
+        notepad: [{ ...note, id: genId(), createdAt: new Date().toISOString() }, ...state.notepad].slice(0, 100),
+      })),
+
+      removeNote: (id) => set((state) => ({
+        notepad: state.notepad.filter(n => n.id !== id),
+      })),
+
+      updateNote: (id, patch) => set((state) => ({
+        notepad: state.notepad.map(n => n.id === id ? { ...n, ...patch } : n),
+      })),
     }),
     {
       name: "dedomena_meta_v2",
@@ -95,6 +115,7 @@ export const useAppStore = create<AppState>()(
         sources: state.sources,
         settings: state.settings,
         queryHistory: state.queryHistory,
+        notepad: state.notepad,
       }),
     }
   )

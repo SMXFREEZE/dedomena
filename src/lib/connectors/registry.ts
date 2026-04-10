@@ -1049,11 +1049,11 @@ export const CONNECTORS: Connector[] = [
     fields: [u('url','Feed URL','https://example.com/feed.xml',true)],
   },
   {
-    id: 'web-scrape', name: 'Web Page', color: '#43853d',
-    category: 'custom', executionMode: 'server',
-    description: 'Extract readable content from any public URL.',
-    tags: ['scrape', 'web', 'html', 'url'],
-    fields: [u('url','Page URL','https://example.com',true)],
+    id: 'web-scrape', name: 'Web Page / URL', color: '#43853d',
+    category: 'custom', executionMode: 'server', popular: true,
+    description: 'Import content from any public URL — web pages, APIs, documents.',
+    tags: ['scrape', 'web', 'html', 'url', 'webpage', 'link', 'website'],
+    fields: [u('url','Page URL','https://example.com/page-or-api',true)],
   },
   {
     id: 'paste', name: 'Paste Text', color: '#ffffff',

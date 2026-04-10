@@ -6,7 +6,7 @@ import { useAppStore, ContentStorage } from "@/store";
 import { CONNECTORS_BY_ID } from "@/lib/connectors/registry";
 import { CredentialStorage } from "@/store/credential-store";
 import { runClientFetcher } from "@/lib/connectors/fetchers";
-import { Database, Plus, Settings, Blocks, Sparkles, Network, Trash2, ChevronDown, ChevronRight, RefreshCw, AlertCircle } from "lucide-react";
+import { Database, Plus, Settings, Sparkles, Trash2, ChevronDown, ChevronRight, RefreshCw, AlertCircle, Bot, StickyNote, Plug, BarChart3, Globe, Mic, Mail } from "lucide-react";
 import { ConnectorIcon } from "@/components/ui/connector-icon";
 import { cn, fmtChars } from "@/lib/utils";
 import { toast } from "sonner";
@@ -33,11 +33,13 @@ function freshnessColor(iso?: string): string {
 export function Sidebar({
   onAddSource,
   onOpenSettings,
+  onToggleNotepad,
   activeTab,
   setActiveTab,
 }: {
   onAddSource: () => void;
   onOpenSettings: () => void;
+  onToggleNotepad: () => void;
   activeTab: string;
   setActiveTab: (v: string) => void;
 }) {
@@ -50,10 +52,26 @@ export function Sidebar({
 
   const totalChars = sources.reduce((acc, s) => acc + (s.charCount || 0), 0);
 
-  const navItems = [
-    { id: "intelligence",  icon: Sparkles,   label: "Intelligence",  desc: "Search & synthesis" },
-    { id: "engineer",      icon: Network,    label: "Data Engineer", desc: "Clean & normalize" },
-    { id: "analyst",       icon: Blocks,     label: "Analyst",       desc: "Charts & insights" },
+  const navSections = [
+    {
+      label: "Intelligence",
+      items: [
+        { id: "intelligence", icon: Sparkles, label: "Ask AI", desc: "Chat, search & reports" },
+        { id: "agent",        icon: Bot,      label: "Agent",  desc: "Browser, files, email, shell", badgeIcons: [Globe, Mic, Mail] },
+      ],
+    },
+    {
+      label: "Data Tools",
+      items: [
+        { id: "analyze", icon: BarChart3, label: "Analyze", desc: "Charts, insights & cleaning" },
+      ],
+    },
+    {
+      label: "Connections",
+      items: [
+        { id: "connect", icon: Plug, label: "Connect", desc: "Cloud, databases & services" },
+      ],
+    },
   ];
 
   const handleDelete = (id: string, name: string, e: React.MouseEvent) => {
@@ -124,49 +142,87 @@ export function Sidebar({
           </h1>
           <span className="brand-sigma text-[1.8rem] text-white/25 leading-none select-none">Σ</span>
         </div>
-        <button
-          type="button"
-          title="Settings"
-          onClick={onOpenSettings}
-          className="p-1.5 rounded-lg text-white/30 hover:text-white/80 hover:bg-[rgba(255,255,255,0.05)] border border-transparent hover:border-[rgba(255,255,255,0.08)] transition-all"
-        >
-          <Settings size={14} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            title="Notepad"
+            onClick={onToggleNotepad}
+            className="p-1.5 rounded-lg text-white/30 hover:text-amber-400/70 hover:bg-[rgba(255,255,255,0.05)] border border-transparent hover:border-[rgba(255,255,255,0.08)] transition-all"
+          >
+            <StickyNote size={14} />
+          </button>
+          <button
+            type="button"
+            title="Settings"
+            onClick={onOpenSettings}
+            className="p-1.5 rounded-lg text-white/30 hover:text-white/80 hover:bg-[rgba(255,255,255,0.05)] border border-transparent hover:border-[rgba(255,255,255,0.08)] transition-all"
+          >
+            <Settings size={14} />
+          </button>
+        </div>
       </div>
 
-      {/* Navigation — Linear luminance-stepped active states */}
-      <div className="px-3 py-3 space-y-0.5">
-        {navItems.map((item) => {
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setActiveTab(item.id)}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left group",
-                isActive
-                  ? "bg-[rgba(255,255,255,0.06)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),inset_0_-1px_0_0_rgba(0,0,0,0.15)] border border-[rgba(255,255,255,0.08)]"
-                  : "hover:bg-[rgba(255,255,255,0.03)] border border-transparent"
-              )}
-            >
-              <div className={cn(
-                "w-6 h-6 rounded-md flex items-center justify-center transition-all shrink-0",
-                isActive
-                  ? "bg-gradient-to-br from-[rgba(147,130,255,0.25)] to-[rgba(255,107,107,0.15)] text-white/90"
-                  : "bg-[rgba(255,255,255,0.04)] text-white/35 group-hover:text-white/55"
-              )}>
-                <item.icon size={13} />
-              </div>
-              <div className={cn(
-                "text-[13px] transition-colors tracking-[-0.01em]",
-                isActive ? "text-white font-medium" : "text-white/50 group-hover:text-white/80"
-              )}>
-                {item.label}
-              </div>
-            </button>
-          );
-        })}
+      {/* Navigation — grouped by section */}
+      <div className="px-3 py-3 space-y-3">
+        {navSections.map((section) => (
+          <div key={section.label}>
+            <p className="text-[9px] uppercase tracking-[0.14em] text-white/20 font-semibold px-3 mb-1">
+              {section.label}
+            </p>
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveTab(item.id)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left group",
+                      isActive
+                        ? "bg-[rgba(255,255,255,0.06)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),inset_0_-1px_0_0_rgba(0,0,0,0.15)] border border-[rgba(255,255,255,0.08)]"
+                        : "hover:bg-[rgba(255,255,255,0.03)] border border-transparent"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-6 h-6 rounded-md flex items-center justify-center transition-all shrink-0",
+                      isActive
+                        ? "bg-gradient-to-br from-[rgba(147,130,255,0.25)] to-[rgba(255,107,107,0.15)] text-white/90"
+                        : "bg-[rgba(255,255,255,0.04)] text-white/35 group-hover:text-white/55"
+                    )}>
+                      <item.icon size={13} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "text-[13px] transition-colors tracking-[-0.01em]",
+                          isActive ? "text-white font-medium" : "text-white/50 group-hover:text-white/80"
+                        )}>
+                          {item.label}
+                        </span>
+                        {(item as any).badgeIcons && (
+                          <span className="flex items-center gap-1 ml-auto">
+                            {(item as any).badgeIcons.map((BadgeIcon: any, bi: number) => (
+                              <span key={bi} className="w-4 h-4 rounded flex items-center justify-center bg-white/[0.04]">
+                                <BadgeIcon size={9} className="text-white/25" />
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                      </div>
+                      <p className={cn(
+                        "text-[10px] leading-tight mt-0.5",
+                        isActive ? "text-white/35" : "text-white/20"
+                      )}>
+                        {item.desc}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Sources header */}

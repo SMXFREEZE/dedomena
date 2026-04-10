@@ -9,7 +9,8 @@ import { CONNECTORS_BY_ID } from "@/lib/connectors/registry";
 import {
   Search, Sparkles, Command, RefreshCw, Layers,
   MessageSquare, BarChart2, Copy, Check, Download,
-  ChevronRight, History, Database, AlertTriangle,
+  ChevronRight, History, Database, AlertTriangle, StickyNote,
+  Mic, MicOff,
 } from "lucide-react";
 import { useAppStore, ContentStorage } from "@/store";
 import { toast } from "sonner";
@@ -152,6 +153,8 @@ export function IntelligenceView() {
   const [structuredResult, setStructuredResult] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showHistory, setShowHistory] = useState(false);
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const sources = useAppStore(s => s.sources);
   const suggestions = getSuggestions(sources.map(s => s.type));
@@ -159,6 +162,7 @@ export function IntelligenceView() {
   const queryHistory = useAppStore(s => s.queryHistory);
   const addQueryRecord = useAppStore(s => s.addQueryRecord);
   const clearHistory = useAppStore(s => s.clearHistory);
+  const addNote = useAppStore(s => s.addNote);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -189,6 +193,37 @@ export function IntelligenceView() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  const toggleVoiceInput = useCallback(() => {
+    if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+      toast.error("Speech recognition not supported in this browser.");
+      return;
+    }
+    if (listening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setListening(false);
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    let final = query;
+    recognition.onresult = (e: any) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript + " ";
+        else interim = e.results[i][0].transcript;
+      }
+      setQuery(final + interim);
+    };
+    recognition.onerror = (e: any) => { if (e.error !== "aborted") toast.error(`Voice: ${e.error}`); setListening(false); };
+    recognition.onend = () => setListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setListening(true);
+  }, [listening, query]);
 
   const activeSources = selectedIds.size > 0
     ? sources.filter(s => selectedIds.has(s.id))
@@ -538,7 +573,22 @@ export function IntelligenceView() {
                                 <div className="w-1 h-3.5 bg-[#9370ff]/50 rounded-sm animate-pulse ml-1" />
                               )}
                             </div>
-                            {!msg.streaming && <CopyButton text={msg.content} />}
+                            {!msg.streaming && (
+                              <div className="flex items-center gap-0.5">
+                                <button
+                                  type="button"
+                                  title="Pin to notepad"
+                                  onClick={() => {
+                                    addNote({ title: `Chat — ${new Date().toLocaleDateString()}`, content: msg.content, sourceQuery: messages.find(m => m.role === "user")?.content });
+                                    toast.success("Pinned to notepad");
+                                  }}
+                                  className="p-1.5 rounded-lg text-white/20 hover:text-amber-400/60 hover:bg-white/5 transition-all"
+                                >
+                                  <StickyNote size={12} />
+                                </button>
+                                <CopyButton text={msg.content} />
+                              </div>
+                            )}
                           </div>
                           <div className="prose-chat text-[13px] text-white/80 leading-relaxed tracking-[-0.01em]">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
@@ -608,6 +658,17 @@ export function IntelligenceView() {
                         <h3 className="font-semibold text-sm tracking-widest uppercase">Executive Synthesis</h3>
                       </div>
                       <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          title="Pin to notepad"
+                          onClick={() => {
+                            addNote({ title: `Analysis — ${new Date().toLocaleDateString()}`, content: structuredResult.summary });
+                            toast.success("Pinned to notepad");
+                          }}
+                          className="p-1.5 rounded-lg text-white/20 hover:text-amber-400/60 hover:bg-white/5 transition-all"
+                        >
+                          <StickyNote size={13} />
+                        </button>
                         <CopyButton text={structuredResult.summary} />
                         <button type="button" onClick={() => exportMarkdown(structuredResult)} title="Export as Markdown"
                           className="p-1.5 rounded-lg text-white/20 hover:text-white/60 hover:bg-white/5 transition-all">
@@ -729,7 +790,20 @@ export function IntelligenceView() {
                 onKeyDown={e => e.key === "Enter" && !e.shiftKey && !loading && execute(query)}
                 className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/30 text-sm py-3 placeholder:font-light"
               />
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={toggleVoiceInput}
+                  className={cn(
+                    "p-2 rounded-lg transition-all",
+                    listening
+                      ? "text-red-400 bg-red-400/10 animate-pulse"
+                      : "text-white/20 hover:text-white/50 hover:bg-white/5"
+                  )}
+                  title={listening ? "Stop listening" : "Voice input"}
+                >
+                  {listening ? <MicOff size={14} /> : <Mic size={14} />}
+                </button>
                 <span className="text-[10px] text-white/15 font-mono hidden md:block">⌘K</span>
                 <Button size="lg" className="rounded-lg gap-2 text-sm" onClick={() => execute(query)} disabled={loading}>
                   {loading ? <RefreshCw size={14} className="animate-spin" /> : <Command size={14} />}

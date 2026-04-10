@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/layout/sidebar";
 import { IntelligenceView } from "@/components/views/intelligence-view";
-import { EngineerView } from "@/components/views/engineer-view";
-import { AnalystView } from "@/components/views/analyst-view";
+import { AgentView } from "@/components/views/agent-view";
+import { AnalyzeView } from "@/components/views/analyze-view";
+import { ConnectView } from "@/components/views/connect-view";
 import { AddSourceModal } from "@/components/modals/add-source-modal";
 import { SettingsModal } from "@/components/modals/settings-modal";
+import { NotepadPanel } from "@/components/panels/notepad-panel";
 import { useAppStore, ContentStorage } from "@/store";
 import { CredentialStorage } from "@/store/credential-store";
 import { detectOAuthCallback, cleanOAuthFromUrl, exchangeCode } from "@/lib/connectors/oauth";
@@ -19,6 +21,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("intelligence");
   const [showAddSource, setShowAddSource] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showNotepad, setShowNotepad] = useState(false);
   const { addSourceMeta } = useAppStore();
 
   // Generic OAuth callback handler — works for all connectors
@@ -68,18 +71,23 @@ export default function Home() {
       <Sidebar
         onAddSource={() => setShowAddSource(true)}
         onOpenSettings={() => setShowSettings(true)}
+        onToggleNotepad={() => setShowNotepad(v => !v)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
       <main className="flex-1 relative overflow-hidden flex flex-col bg-black/40">
         <AnimatePresence mode="wait">
           {activeTab === "intelligence" && <IntelligenceView key="intel" />}
-          {activeTab === "engineer" && <EngineerView key="eng" />}
-          {activeTab === "analyst" && <AnalystView key="data" />}
+          {activeTab === "agent" && <AgentView key="agent" />}
+          {activeTab === "analyze" && <AnalyzeView key="analyze" />}
+          {activeTab === "connect" && <ConnectView key="connect" />}
         </AnimatePresence>
       </main>
       <AddSourceModal isOpen={showAddSource} onClose={() => setShowAddSource(false)} />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <AnimatePresence>
+        {showNotepad && <NotepadPanel isOpen={showNotepad} onClose={() => setShowNotepad(false)} />}
+      </AnimatePresence>
     </div>
   );
 }
