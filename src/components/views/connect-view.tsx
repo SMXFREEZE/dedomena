@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
@@ -202,6 +202,25 @@ function ServiceCard({ def, existing, onConnect, onDisconnect }: {
     }
   };
 
+  useEffect(() => {
+    if (!open || !def.oauthProvider) return;
+    const handler = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      const data = e.data;
+      if (data?.type === "dedomena_oauth_result" && data.connectorId === def.id) {
+        if (data.error) {
+          toast.error(`OAuth Error: ${data.error}`);
+        } else {
+          onConnect(def, { accessToken: data.accessToken, githubToken: data.accessToken, slackBotToken: data.accessToken });
+          toast.success(`Successfully authenticated via ${def.oauthProvider}`);
+          setOpen(false);
+        }
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [open, def, onConnect]);
+
   return (
     <div className={cn(
       "rounded-2xl border transition-all",
@@ -258,7 +277,23 @@ function ServiceCard({ def, existing, onConnect, onDisconnect }: {
           >
             <div className="px-4 pb-4 pt-1 border-t border-white/5 space-y-3">
               {/* Zero-config services */}
-              {def.configFields.length === 0 ? (
+              {def.oauthProvider ? (
+                <div className="space-y-4">
+                  <div className="rounded-xl bg-blue-500/5 border border-blue-500/15 p-4 space-y-2 text-center">
+                    <CheckCircle2 size={24} className="text-blue-400 mx-auto" />
+                    <p className="text-[14px] font-semibold text-white/90">Connect using {def.oauthProvider}</p>
+                    <p className="text-[12px] text-white/50 pb-2">Authenticate securely with your provider. No more copying api tokens.</p>
+                    <Button
+                      className="w-full rounded-xl text-sm font-semibold tracking-wide bg-white text-black hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all"
+                      onClick={() => {
+                        window.open(`/api/oauth/start?provider=${def.oauthProvider}&connectorId=${def.id}`, "_blank", "width=600,height=800");
+                      }}
+                    >
+                      Authenticate via OAuth
+                    </Button>
+                  </div>
+                </div>
+              ) : def.configFields.length === 0 ? (
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
                   <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
                   <div>
@@ -312,14 +347,16 @@ function ServiceCard({ def, existing, onConnect, onDisconnect }: {
                 </div>
               )}
 
-              <Button
-                className="w-full rounded-xl h-10 text-sm font-semibold gap-2"
-                onClick={handleConnect}
-                disabled={connecting}
-              >
-                {connecting ? <Loader2 size={14} className="animate-spin" /> : <Plug size={14} />}
-                Connect to {friendlyName}
-              </Button>
+              {!def.oauthProvider && (
+                <Button
+                  className="w-full rounded-xl h-10 text-sm font-semibold gap-2"
+                  onClick={handleConnect}
+                  disabled={connecting}
+                >
+                  {connecting ? <Loader2 size={14} className="animate-spin" /> : <Plug size={14} />}
+                  Connect to {friendlyName}
+                </Button>
+              )}
 
               {hasError && existing?.error && (
                 <p className="text-[11px] text-red-400/70 bg-red-400/5 rounded-xl px-3 py-2">

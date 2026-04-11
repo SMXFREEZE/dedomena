@@ -19,6 +19,7 @@ export interface MCPServerDef {
   defaultUrl?: string;
   docs?: string;
   popular?: boolean;
+  oauthProvider?: string;
 }
 
 export interface MCPConfigField {
@@ -348,7 +349,8 @@ export const MCP_SERVERS: MCPServerDef[] = [
     description: "Connect your Gmail inbox for reading, searching, and sending emails.",
     category: "communication", icon: "gmail", color: "#EA4335",
     transport: "stdio", popular: true,
-    configFields: [ pass("accessToken", "Google Access Token") ],
+    oauthProvider: "google",
+    configFields: [ ],
   },
   {
     id: "outlook",
@@ -356,7 +358,8 @@ export const MCP_SERVERS: MCPServerDef[] = [
     description: "Connect your Microsoft Outlook inbox.",
     category: "communication", icon: "microsoftoutlook", color: "#0078D4",
     transport: "stdio", popular: true,
-    configFields: [ pass("accessToken", "Microsoft Graph Access Token") ],
+    oauthProvider: "microsoft",
+    configFields: [ ],
   },
   {
     id: "google-calendar",
@@ -372,7 +375,8 @@ export const MCP_SERVERS: MCPServerDef[] = [
     description: "Manage sales pipeline, contacts, and opportunities.",
     category: "cloud", icon: "salesforce", color: "#00A1E0",
     transport: "stdio", popular: true,
-    configFields: [ pass("accessToken", "Salesforce API Token") ],
+    oauthProvider: "salesforce",
+    configFields: [ ],
   },
   {
     id: "hubspot",
@@ -380,7 +384,8 @@ export const MCP_SERVERS: MCPServerDef[] = [
     description: "Manage contacts, create deals, and search your CRM.",
     category: "cloud", icon: "hubspot", color: "#FF7A59",
     transport: "stdio", popular: true,
-    configFields: [ pass("accessToken", "HubSpot Access Token") ],
+    oauthProvider: "hubspot",
+    configFields: [ ],
   },
   {
     id: "jira",
@@ -412,7 +417,8 @@ export const MCP_SERVERS: MCPServerDef[] = [
     description: "Manage cloud files and storage.",
     category: "files", icon: "googledrive", color: "#4285F4",
     transport: "stdio", popular: true,
-    configFields: [ pass("accessToken", "Google Access Token") ],
+    oauthProvider: "google",
+    configFields: [ ],
   },
   {
     id: "zendesk",
