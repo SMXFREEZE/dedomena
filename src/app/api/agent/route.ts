@@ -167,6 +167,18 @@ const AGENT_TOOLS = [
     },
   },
   {
+    name: "database_action",
+    description: "Execute SQL or NoSQL queries against connected databases. Supported services: postgres-mcp, mysql-mcp, mongo-mcp, upstash, sqlite-mcp.",
+    input_schema: {
+      type: "object",
+      properties: {
+        service: { type: "string", description: "One of the connected DB aliases (e.g. postgres-mcp, mysql-mcp)" },
+        query: { type: "string", description: "The SQL or query document to run against the database." },
+      },
+      required: ["service", "query"],
+    },
+  },
+  {
     name: "analytics_action",
     description: "Fetch traffic, sales and revenue metrics. Supported services: stripe, shopify, google-analytics.",
     input_schema: {
@@ -313,14 +325,46 @@ async function getPage() {
 }
 
 // ── Tool execution ───────────────────────────────────────────────────────────
-async function executeTool(tool: string, input: any, serviceTokens: Record<string, string>): Promise<string> {
+async function executeTool(tool: string, input: any, serviceTokens: Record<string, string>, serviceConfigs: Record<string, any>): Promise<string> {
   const fs = await import("fs/promises");
   const path = await import("path");
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+
+  // Database operations
+  if (tool === "database_action") {
+    const config = serviceConfigs?.[input.service];
+    if (!config) return `Configuration missing: You need to connect ${input.service} with valid credentials.`;
+    
+    // The agent uses the MCP id (e.g., postgres-mcp), but the db endpoint uses the base id (e.g., postgresql).
+    const connectorIdMap: Record<string, string> = {
+      "postgres-mcp": "postgresql",
+      "mysql-mcp": "mysql",
+      "mongo-mcp": "mongodb",
+      "sqlite-mcp": "turso" // Or local fallback
+    };
+    
+    const mappedConnector = connectorIdMap[input.service] || input.service.replace("-mcp", "");
+    
+    try {
+      const res = await fetch(`${baseUrl}/api/connector/db`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          connectorId: mappedConnector,
+          credentials: { ...config, query: input.query },
+        })
+      });
+      const d = await res.json();
+      if (!res.ok) return `Database error (${input.service}): ${d.error}\nHint: ${d.hint ?? ""}`;
+      return `[Database Results - ${d.recordCount} rows]\n${d.content.slice(0, 15000)}`;
+    } catch (e: any) {
+      return `Database connection error: ${e.message}`;
+    }
+  }
 
   // Enterprise operations handler
   if (["email_action", "calendar_action", "crm_action", "project_action", "messaging_action", "storage_action", "support_action", "analytics_action"].includes(tool)) {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
     
     const token = serviceTokens[input.service] ?? "";
     if (!token) return `Authentication error: You need to connect ${input.service} in the Data Sources panel first.`;
@@ -641,7 +685,7 @@ async function executeTool(tool: string, input: any, serviceTokens: Record<strin
 // ── Route handler ────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    const { task, sourcesContext, history, serviceTokens } = await req.json();
+    const { task, sourcesContext, history, serviceTokens, serviceConfigs } = await req.json();
 
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
     if (!anthropicKey) {
@@ -725,7 +769,7 @@ ${sourcesContext ? `\nThe user has these local data sources connected:\n${source
       for (const tu of toolUses) {
         steps.push({ type: "tool_call", content: { tool: tu.name, input: tu.input } });
 
-        const result = await executeTool(tu.name, tu.input, serviceTokens ?? {});
+        const result = await executeTool(tu.name, tu.input, serviceTokens ?? {}, serviceConfigs ?? {});
         steps.push({ type: "tool_result", content: { tool: tu.name, result: result.slice(0, 3000) } });
 
         toolResults.push({
