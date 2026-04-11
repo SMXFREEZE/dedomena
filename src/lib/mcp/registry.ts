@@ -337,6 +337,107 @@ export const MCP_SERVERS: MCPServerDef[] = [
       pass("apiKey", "API Key / Bearer Token (optional)"),
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ENTERPRISE APPS (Native integrations)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  {
+    id: "gmail",
+    name: "Gmail",
+    description: "Connect your Gmail inbox for reading, searching, and sending emails.",
+    category: "communication", icon: "gmail", color: "#EA4335",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Google Access Token") ],
+  },
+  {
+    id: "outlook",
+    name: "Outlook",
+    description: "Connect your Microsoft Outlook inbox.",
+    category: "communication", icon: "microsoftoutlook", color: "#0078D4",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Microsoft Graph Access Token") ],
+  },
+  {
+    id: "google-calendar",
+    name: "Google Calendar",
+    description: "Manage events and view schedules from Google Calendar.",
+    category: "communication", icon: "googlecalendar", color: "#4285F4",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Google Access Token") ],
+  },
+  {
+    id: "salesforce",
+    name: "Salesforce",
+    description: "Manage sales pipeline, contacts, and opportunities.",
+    category: "cloud", icon: "salesforce", color: "#00A1E0",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Salesforce API Token") ],
+  },
+  {
+    id: "hubspot",
+    name: "HubSpot",
+    description: "Manage contacts, create deals, and search your CRM.",
+    category: "cloud", icon: "hubspot", color: "#FF7A59",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "HubSpot Access Token") ],
+  },
+  {
+    id: "jira",
+    name: "Jira",
+    description: "Manage tickets, issues, sprints and boards.",
+    category: "devtools", icon: "jira", color: "#0052CC",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Jira API Token") ],
+  },
+  {
+    id: "linear",
+    name: "Linear",
+    description: "Manage issues, projects, and cycles.",
+    category: "devtools", icon: "linear", color: "#5E6AD2",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Linear API Key") ],
+  },
+  {
+    id: "notion",
+    name: "Notion",
+    description: "Manage workspace pages and databases.",
+    category: "files", icon: "notion", color: "#FFFFFF",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Notion Integration Token") ],
+  },
+  {
+    id: "google-drive",
+    name: "Google Drive",
+    description: "Manage cloud files and storage.",
+    category: "files", icon: "googledrive", color: "#4285F4",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Google Access Token") ],
+  },
+  {
+    id: "zendesk",
+    name: "Zendesk",
+    description: "Manage customer support tickets.",
+    category: "communication", icon: "zendesk", color: "#03363D",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Zendesk API Token") ],
+  },
+  {
+    id: "stripe",
+    name: "Stripe",
+    description: "Fetch transaction data, payments, and subscriptions.",
+    category: "analytics", icon: "stripe", color: "#635BFF",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Stripe API Key") ],
+  },
+  {
+    id: "shopify",
+    name: "Shopify",
+    description: "Manage store orders, products, and customers.",
+    category: "analytics", icon: "shopify", color: "#95BF47",
+    transport: "stdio", popular: true,
+    configFields: [ pass("accessToken", "Shopify Access Token") ],
+  },
 ];
 
 export const MCP_SERVERS_BY_ID = Object.fromEntries(MCP_SERVERS.map(s => [s.id, s]));
