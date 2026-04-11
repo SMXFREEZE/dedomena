@@ -76,16 +76,107 @@ const AGENT_TOOLS = [
   },
   // ── Enterprise tools ────────────────────────────────────────────────────────
   {
-    name: "send_email",
-    description: "Send an email report or notification. Use this to email analysis results, reports, or alerts to team members.",
+    name: "email_action",
+    description: "Read, search, send, reply, or forward emails. Supported services: gmail, outlook.",
     input_schema: {
       type: "object",
       properties: {
-        to: { type: "string", description: "Recipient email address" },
-        subject: { type: "string", description: "Email subject line" },
-        body: { type: "string", description: "Email body (plain text or markdown)" },
+        service: { type: "string", description: "Either 'gmail' or 'outlook'" },
+        operation: { type: "string", description: "One of: list, search, get, send, reply, labels, markRead" },
+        params: { type: "object", description: "Parameters for the operation (e.g. { to, subject, body } for send, { query } for search)" },
       },
-      required: ["to", "subject", "body"],
+      required: ["service", "operation", "params"],
+    },
+  },
+  {
+    name: "calendar_action",
+    description: "View schedule or manage events. Supported services: google-calendar, outlook-calendar.",
+    input_schema: {
+      type: "object",
+      properties: {
+        service: { type: "string", description: "Either 'google-calendar' or 'outlook-calendar'" },
+        operation: { type: "string", description: "One of: list, create, delete" },
+        params: { type: "object", description: "Parameters for the operation" },
+      },
+      required: ["service", "operation", "params"],
+    },
+  },
+  {
+    name: "crm_action",
+    description: "Manage sales pipeline, contacts and companies. Supported services: salesforce, hubspot.",
+    input_schema: {
+      type: "object",
+      properties: {
+        service: { type: "string", description: "Either 'salesforce' or 'hubspot'" },
+        operation: { type: "string", description: "One of: query, get_record, create_record, update_record for salesforce. list_contacts, search, create_contact, create_deal for hubspot" },
+        params: { type: "object", description: "Parameters for the operation" },
+      },
+      required: ["service", "operation", "params"],
+    },
+  },
+  {
+    name: "project_action",
+    description: "Manage tickets, issues, boards. Supported services: jira, linear, notion, github.",
+    input_schema: {
+      type: "object",
+      properties: {
+        service: { type: "string", description: "One of that: jira, linear, notion, github" },
+        operation: { type: "string", description: "Examples: search_issues, get_issue, create_issue, comment (Jira). list_issues, create_issue (Linear). search, create_page (Notion)." },
+        params: { type: "object", description: "Parameters for the operation" },
+      },
+      required: ["service", "operation", "params"],
+    },
+  },
+  {
+    name: "messaging_action",
+    description: "Read channels and post messages. Supported services: slack.",
+    input_schema: {
+      type: "object",
+      properties: {
+        service: { type: "string", description: "Must be 'slack'" },
+        operation: { type: "string", description: "One of: list_channels, read_channel, post_message, search" },
+        params: { type: "object", description: "Parameters for the operation" },
+      },
+      required: ["service", "operation", "params"],
+    },
+  },
+  {
+    name: "storage_action",
+    description: "Manage cloud files and storage. Supported services: google-drive.",
+    input_schema: {
+      type: "object",
+      properties: {
+        service: { type: "string", description: "Must be 'google-drive'" },
+        operation: { type: "string", description: "One of: list, search" },
+        params: { type: "object", description: "Parameters for the operation" },
+      },
+      required: ["service", "operation", "params"],
+    },
+  },
+  {
+    name: "support_action",
+    description: "Manage customer support desk. Supported services: zendesk.",
+    input_schema: {
+      type: "object",
+      properties: {
+        service: { type: "string", description: "Must be 'zendesk'" },
+        operation: { type: "string", description: "One of: list_tickets, create_ticket" },
+        params: { type: "object", description: "Parameters for the operation" },
+      },
+      required: ["service", "operation", "params"],
+    },
+  },
+  {
+    name: "analytics_action",
+    description: "Fetch traffic, sales and revenue metrics. Supported services: stripe, shopify, google-analytics.",
+    input_schema: {
+      type: "object",
+      properties: {
+        service: { type: "string", description: "One of that: stripe, shopify, google-analytics" },
+        operation: { type: "string", description: "Examples: list_customers, list_charges, list_subscriptions (Stripe). list_orders, list_products (Shopify). run_report (GA)" },
+        params: { type: "object", description: "Parameters for the operation" },
+      },
+      required: ["service", "operation", "params"],
     },
   },
   {
@@ -222,10 +313,38 @@ async function getPage() {
 }
 
 // ── Tool execution ───────────────────────────────────────────────────────────
-async function executeTool(tool: string, input: any): Promise<string> {
+async function executeTool(tool: string, input: any, serviceTokens: Record<string, string>): Promise<string> {
   const fs = await import("fs/promises");
   const path = await import("path");
 
+  // Enterprise operations handler
+  if (["email_action", "calendar_action", "crm_action", "project_action", "messaging_action", "storage_action", "support_action", "analytics_action"].includes(tool)) {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+    
+    const token = serviceTokens[input.service] ?? "";
+    if (!token) return `Authentication error: You need to connect ${input.service} in the Data Sources panel first.`;
+
+    try {
+      const res = await fetch(`${baseUrl}/api/services`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service: input.service,
+          operation: input.operation,
+          params: input.params,
+          accessToken: token,
+        })
+      });
+      const d = await res.json();
+      if (!res.ok) return `Service error (${input.service} ${input.operation}): ${d.error}`;
+      return `[${input.service}] ${d.result}`;
+    } catch (e: any) {
+      return `Service error (${input.service}): ${e.message}`;
+    }
+  }
+
+  // Handle other tools...
   switch (tool) {
     case "read_file": {
       try {
@@ -316,23 +435,6 @@ async function executeTool(tool: string, input: any): Promise<string> {
 
     case "analyze_data": {
       return `[analyze_data] This tool requires client-side source data. The query "${input.query}" should be processed against the user's imported datasets.`;
-    }
-
-    case "send_email": {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-        const res = await fetch(`${baseUrl}/api/email/send`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to: input.to, subject: input.subject, body: input.body }),
-        });
-        const data = await res.json();
-        if (!res.ok) return `Email error: ${data.error}`;
-        return `Email sent successfully to ${input.to} — subject: "${input.subject}"`;
-      } catch (e: any) {
-        return `Email error: ${e.message}`;
-      }
     }
 
     case "run_shell": {
@@ -539,50 +641,34 @@ async function executeTool(tool: string, input: any): Promise<string> {
 // ── Route handler ────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    const { task, sourcesContext, history } = await req.json();
+    const { task, sourcesContext, history, serviceTokens } = await req.json();
 
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
     if (!anthropicKey) {
       return NextResponse.json({ error: "Anthropic API key not configured." }, { status: 500 });
     }
 
-    const systemPrompt = `You are an autonomous AI agent inside the Dedomena enterprise data intelligence platform. You can interact with the user's local computer, browse the web, run shell commands, send emails, and work with cloud platforms and online resources.
+    const availableServices = Object.keys(serviceTokens ?? {}).join(", ");
+
+    const systemPrompt = `You are an autonomous operations agent inside the Dedomena enterprise data platform. You can interact with the user's local computer, browse the web, run shell commands, and natively manage enterprise applications.
 
 CAPABILITIES:
 - Read and write files on the user's local filesystem
-- List and search directories
-- Execute shell commands (scripts, pipelines, system operations)
-- Fetch data from any URL (web pages, APIs, RSS feeds)
-- Control a headless browser: navigate pages, click buttons, fill forms, extract data, take screenshots
-- Send email reports and notifications to team members
-- Analyze the user's imported data sources
-- Connect to cloud platforms (AWS, Azure, Databricks) and enterprise services via MCP
+- Control a headless browser
+- Access enterprise APIs via action tools (email, messaging, CRM, project management)
+${availableServices ? `- You CURRENTLY have access to these services: ${availableServices}` : "- You currently have NO services connected. Tell the user to connect them in the Data Sources tab."}
 
-BROWSER AUTOMATION:
-When the user needs help with web tasks (signing up, finding API keys, scraping data, filling forms):
-1. Use browser_navigate to go to the page
-2. Use browser_screenshot to see what's on the page
-3. Use browser_click and browser_type to interact with elements
-4. Use browser_extract to pull specific data
-5. Use browser_evaluate for complex JavaScript operations
-
-EMAIL:
-Use send_email to deliver analysis reports, alerts, or notifications to team members.
-
-SHELL:
-Use run_shell to execute commands, run data pipelines, install tools, or check system information.
+ENTERPRISE WORKFLOWS (Examples):
+- "Check my email and create a Jira ticket" -> email_action(search/get) -> project_action(create_issue)
+- "Send our Salesforce leads from today to Slack #sales" -> crm_action(query) -> messaging_action(post_message)
+- "Find the Q1 report in Drive and email it to Sarah" -> storage_action(search) -> email_action(send)
 
 RULES:
 1. Always explain what you're about to do before using a tool.
 2. After each tool use, analyze the result and decide the next step.
-3. Be careful with write_file and run_shell — confirm destructive actions in your reasoning.
-4. When using the browser, describe what you see after each action.
-5. Never enter passwords or sensitive credentials into websites unless the user explicitly provides them.
-6. When reading files, handle errors gracefully.
-7. Provide a clear summary of what you accomplished at the end.
-8. For shell commands, avoid destructive operations unless explicitly requested.
-
-${sourcesContext ? `\nThe user has these data sources connected:\n${sourcesContext}\n` : ""}`;
+3. Be careful with destructive actions (sending email, posting to slack, creating records).
+4. Provide a clear summary of what you accomplished at the end.
+${sourcesContext ? `\nThe user has these local data sources connected:\n${sourcesContext}\n` : ""}`;
 
     const messages: any[] = [];
 
@@ -639,7 +725,7 @@ ${sourcesContext ? `\nThe user has these data sources connected:\n${sourcesConte
       for (const tu of toolUses) {
         steps.push({ type: "tool_call", content: { tool: tu.name, input: tu.input } });
 
-        const result = await executeTool(tu.name, tu.input);
+        const result = await executeTool(tu.name, tu.input, serviceTokens ?? {});
         steps.push({ type: "tool_result", content: { tool: tu.name, result: result.slice(0, 3000) } });
 
         toolResults.push({

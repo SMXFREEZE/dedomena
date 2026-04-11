@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useIntegrationsStore } from "@/store/integrations-store";
 
 interface AgentStep {
   type: "thinking" | "tool_call" | "tool_result";
@@ -43,14 +44,14 @@ const TOOL_ICONS: Record<string, any> = {
 };
 
 const EXAMPLE_TASKS = [
-  { icon: FolderOpen, text: "List all CSV files on my Desktop and summarize their contents" },
-  { icon: Globe, text: "Fetch the latest news from TechCrunch and find AI-related articles" },
-  { icon: Monitor, text: "Go to GitHub, navigate to the settings page, and show me how to create an API token" },
-  { icon: Search, text: "Find all JSON config files in my project and check for security issues" },
-  { icon: MousePointer, text: "Open Stripe's dashboard page and extract the pricing table data" },
-  { icon: Camera, text: "Navigate to a website and take a screenshot showing the page layout and key elements" },
-  { icon: Terminal, text: "Analyze my connected datasets and write a summary report to a file" },
-  { icon: Globe, text: "Scrape product prices from a URL and compare with my data" },
+  { icon: FileText, text: "Check my outlook email for any new invoices and forward them to accounting@example.com" },
+  { icon: Globe, text: "List the top 5 recent customer support tickets from Zendesk and summarize the main issues" },
+  { icon: Monitor, text: "Find the latest 'Q4 Planning' Notion page and text its summary to Slack #management" },
+  { icon: Search, text: "Search my Google Drive for 'Q3 Financial Report.pdf' and email it to my manager" },
+  { icon: MousePointer, text: "Check HubSpot for any new leads generated today and create a Salesforce record for each" },
+  { icon: Camera, text: "Create a Jira ticket for the 'Payment API failing' issue and assign it to the backend team" },
+  { icon: Terminal, text: "Read the latest Shopify orders from today and post the total revenue to Slack #sales" },
+  { icon: FolderOpen, text: "View my Google Calendar for tomorrow, and if I have free time, schedule a meeting block" },
 ];
 
 function ToolCallStep({ step }: { step: AgentStep }) {
@@ -240,12 +241,26 @@ export function AgentView() {
         ? sources.map(s => `- ${s.name} (${s.type}, ${s.charCount} chars)`).join("\n")
         : undefined;
 
+      // Extract credentials for all services from local storage
+      const serviceTokens: Record<string, string> = {};
+      const { mcpConnections } = useIntegrationsStore.getState();
+      
+      mcpConnections.forEach(c => {
+        if (c.status === "connected") {
+            // Find the provider config inside connectors registry if needed, 
+            // but since we proxy it to api/services, we just pass the accessToken from config
+            const token = c.config.accessToken || c.config.githubToken || c.config.gitlabToken || c.config.slackBotToken || c.config.slackAppToken || c.config.apiKey || c.config.sentryToken || c.config.databricksToken;
+            if (token) serviceTokens[c.serverId] = token;
+        }
+      });
+
       const res = await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           task: taskText,
           sourcesContext,
+          serviceTokens,
         }),
       });
 
