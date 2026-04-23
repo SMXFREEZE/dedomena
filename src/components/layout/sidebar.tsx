@@ -6,7 +6,8 @@ import { useAppStore, ContentStorage } from "@/store";
 import { CONNECTORS_BY_ID } from "@/lib/connectors/registry";
 import { CredentialStorage } from "@/store/credential-store";
 import { runClientFetcher } from "@/lib/connectors/fetchers";
-import { Database, Plus, Settings, Sparkles, Trash2, ChevronDown, ChevronRight, RefreshCw, AlertCircle, Bot, StickyNote, Plug, BarChart3, Globe, Mic, Mail } from "lucide-react";
+import { Database, Plus, Settings, Sparkles, Trash2, ChevronDown, ChevronRight, RefreshCw, AlertCircle, Bot, StickyNote, Plug, BarChart3, Globe, Mic, Mail, Home } from "lucide-react";
+import Link from "next/link";
 import { ConnectorIcon } from "@/components/ui/connector-icon";
 import { cn, fmtChars } from "@/lib/utils";
 import { toast } from "sonner";
@@ -143,6 +144,13 @@ export function Sidebar({
           <span className="brand-sigma text-[1.8rem] text-white/25 leading-none select-none">Σ</span>
         </div>
         <div className="flex items-center gap-1">
+          <Link
+            href="/"
+            title="Home"
+            className="p-1.5 rounded-lg text-white/30 hover:text-white/80 hover:bg-[rgba(255,255,255,0.05)] border border-transparent hover:border-[rgba(255,255,255,0.08)] transition-all"
+          >
+            <Home size={14} />
+          </Link>
           <button
             type="button"
             title="Notepad"
