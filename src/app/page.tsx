@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Script from "next/script";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 
 declare global {
@@ -9,6 +8,17 @@ declare global {
     VANTA: any;
     THREE: any;
   }
+}
+
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }
 
 const INTEGRATIONS = [
@@ -40,46 +50,37 @@ const FEATURES = [
 ];
 
 export default function LandingPage() {
-  const vantaRef  = useRef<HTMLDivElement>(null);
-  const vantaFx   = useRef<any>(null);
-  const [threeOk, setThreeOk]  = useState(false);
-  const [vantaOk, setVantaOk]  = useState(false);
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const vantaFx  = useRef<any>(null);
 
   useEffect(() => {
-    if (!threeOk || !vantaOk || !vantaRef.current) return;
-    if (vantaFx.current) vantaFx.current.destroy();
-    try {
-      vantaFx.current = window.VANTA.FOG({
-        el: vantaRef.current,
-        THREE: window.THREE,
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: false,
-        highlightColor: 0x0a0f1a,
-        midtoneColor:   0x050810,
-        lowlightColor:  0x020408,
-        baseColor:      0x030507,
-        blurFactor:     0.9,
-        speed:          1.2,
-        zoom:           0.6,
-      });
-    } catch (_) {}
-    return () => { vantaFx.current?.destroy(); };
-  }, [threeOk, vantaOk]);
+    let cancelled = false;
+    (async () => {
+      try {
+        await loadScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js");
+        await loadScript("https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js");
+        if (cancelled || !vantaRef.current || !window.VANTA) return;
+        vantaFx.current = window.VANTA.FOG({
+          el: vantaRef.current,
+          THREE: window.THREE,
+          mouseControls: true,
+          touchControls: true,
+          gyroControls: false,
+          highlightColor: 0x0a0f1a,
+          midtoneColor:   0x050810,
+          lowlightColor:  0x020408,
+          baseColor:      0x030507,
+          blurFactor:     0.9,
+          speed:          1.2,
+          zoom:           0.6,
+        });
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; vantaFx.current?.destroy(); };
+  }, []);
 
   return (
     <>
-      <Script
-        src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"
-        strategy="afterInteractive"
-        onLoad={() => setThreeOk(true)}
-      />
-      <Script
-        src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js"
-        strategy="afterInteractive"
-        onLoad={() => setVantaOk(true)}
-      />
-
       {/* Vanta canvas */}
       <div ref={vantaRef} className="fixed inset-0 z-0" />
 
