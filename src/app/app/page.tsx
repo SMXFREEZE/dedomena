@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
+import { Menu, Plus } from "lucide-react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { IntelligenceView } from "@/components/views/intelligence-view";
 import { AgentView } from "@/components/views/agent-view";
@@ -17,11 +18,19 @@ import { runClientFetcher } from "@/lib/connectors/fetchers";
 import { CONNECTORS_BY_ID } from "@/lib/connectors/registry";
 import { toast } from "sonner";
 
+const TAB_LABELS: Record<string, string> = {
+  intelligence: "Ask AI",
+  agent: "Agent",
+  analyze: "Analyze",
+  connect: "Connect",
+};
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("intelligence");
   const [showAddSource, setShowAddSource] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showNotepad, setShowNotepad] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { addSourceMeta } = useAppStore();
 
   // Generic OAuth callback handler — works for all connectors
@@ -68,14 +77,53 @@ export default function Home() {
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden relative">
-      <Sidebar
-        onAddSource={() => setShowAddSource(true)}
-        onOpenSettings={() => setShowSettings(true)}
-        onToggleNotepad={() => setShowNotepad(v => !v)}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
-      <main className="flex-1 relative overflow-hidden flex flex-col bg-black/40">
+
+      {/* ── Mobile top bar ───────────────────────────────────────────────────── */}
+      <div className="md:hidden fixed top-0 inset-x-0 z-30 h-12 flex items-center px-4 gap-3 bg-black/70 backdrop-blur-xl border-b border-white/[0.05]">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          title="Open menu"
+          className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all"
+        >
+          <Menu size={18} />
+        </button>
+        <span className="flex-1 text-sm font-medium text-white/80 tracking-tight">
+          {TAB_LABELS[activeTab] ?? activeTab}
+        </span>
+        <button
+          type="button"
+          onClick={() => setShowAddSource(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 text-black text-xs font-semibold"
+        >
+          <Plus size={13} strokeWidth={2.5} /> Import
+        </button>
+      </div>
+
+      {/* ── Mobile sidebar overlay ───────────────────────────────────────────── */}
+      {sidebarOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar (drawer on mobile, always visible on desktop) ───────────── */}
+      <div className={[
+        "fixed md:relative inset-y-0 left-0 z-50 md:z-auto transition-transform duration-300 ease-out",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+      ].join(" ")}>
+        <Sidebar
+          onAddSource={() => { setShowAddSource(true); setSidebarOpen(false); }}
+          onOpenSettings={() => { setShowSettings(true); setSidebarOpen(false); }}
+          onToggleNotepad={() => { setShowNotepad(v => !v); setSidebarOpen(false); }}
+          activeTab={activeTab}
+          setActiveTab={(t) => { setActiveTab(t); setSidebarOpen(false); }}
+        />
+      </div>
+
+      {/* ── Main content ────────────────────────────────────────────────────── */}
+      <main className="flex-1 relative overflow-hidden flex flex-col bg-black/40 pt-12 md:pt-0">
         <AnimatePresence mode="wait">
           {activeTab === "intelligence" && <IntelligenceView key="intel" />}
           {activeTab === "agent" && <AgentView key="agent" />}
@@ -83,6 +131,7 @@ export default function Home() {
           {activeTab === "connect" && <ConnectView key="connect" />}
         </AnimatePresence>
       </main>
+
       <AddSourceModal isOpen={showAddSource} onClose={() => setShowAddSource(false)} />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
       <AnimatePresence>
