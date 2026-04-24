@@ -104,11 +104,11 @@ function ToolCallStep({ step }: { step: AgentStep }) {
       <div className="flex items-start gap-2 py-1">
         <div className={cn(
           "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5",
-          isError ? "bg-red-500/10" : "bg-emerald-500/10"
+          isError ? "bg-red-500/10" : "bg-coral-500/10"
         )}>
           {isError
             ? <AlertCircle size={11} className="text-red-400/70" />
-            : <CheckCircle2 size={11} className="text-emerald-400/70" />
+            : <CheckCircle2 size={11} className="text-coral-400/70" />
           }
         </div>
         <div className="min-w-0 flex-1">
@@ -312,14 +312,12 @@ export function AgentView() {
       <div className="px-8 lg:px-12 pt-8 pb-4 shrink-0">
         <div className="max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.07)] text-[11px] text-white/40 mb-4 tracking-[0.12em] uppercase">
-            <Bot size={11} className="text-emerald-400" />
+            <Bot size={11} className="text-coral-400" />
             <span>Autonomous Agent</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.04em] leading-[1.05]">
             AI that acts on<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400/50 to-white/10">
-              your data and computer.
-            </span>
+            <span className="text-gradient">your data and computer.</span>
           </h2>
           <p className="text-sm text-white/30 mt-3 max-w-lg">
             Give the agent a task and it will read files, browse the web, search your filesystem,
@@ -352,7 +350,7 @@ export function AgentView() {
                       "hover:bg-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.11)]",
                     )}
                   >
-                    <ex.icon size={14} className="text-white/20 group-hover:text-emerald-400/60 shrink-0 mt-0.5 transition-colors" />
+                    <ex.icon size={14} className="text-white/20 group-hover:text-coral-400/60 shrink-0 mt-0.5 transition-colors" />
                     <span className="text-[12px] text-white/45 group-hover:text-white/80 transition-colors leading-snug">
                       {ex.text}
                     </span>
@@ -361,8 +359,8 @@ export function AgentView() {
               </div>
 
               {sources.length > 0 && (
-                <div className="flex items-center gap-2 mt-4 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
-                  <CheckCircle2 size={14} className="text-emerald-400/60 shrink-0" />
+                <div className="flex items-center gap-2 mt-4 p-3 rounded-xl bg-coral-500/5 border border-coral-500/15">
+                  <CheckCircle2 size={14} className="text-coral-400/60 shrink-0" />
                   <p className="text-[11px] text-white/40">
                     The agent can access your <strong className="text-white/60">{sources.length} connected source{sources.length !== 1 ? "s" : ""}</strong> for analysis.
                   </p>
@@ -395,7 +393,7 @@ export function AgentView() {
                       "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
                     )}>
                       <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2 text-emerald-400/80">
+                        <div className="flex items-center gap-2 text-coral-400/80">
                           <Bot size={12} />
                           <span className="text-[11px] font-semibold tracking-[0.1em] uppercase">Agent</span>
                           {msg.loading && (
@@ -418,7 +416,7 @@ export function AgentView() {
 
                       {msg.loading ? (
                         <div className="flex items-center gap-3">
-                          <Loader2 size={14} className="animate-spin text-emerald-400/50" />
+                          <Loader2 size={14} className="animate-spin text-coral-400/50" />
                           <span className="text-xs text-white/40 font-mono">
                             Agent is working...
                           </span>
@@ -437,7 +435,7 @@ export function AgentView() {
 
           {loading && messages[messages.length - 1]?.role !== "assistant" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 pl-1">
-              <Loader2 size={16} className="animate-spin text-emerald-400/50" />
+              <Loader2 size={16} className="animate-spin text-coral-400/50" />
               <span className="text-xs text-white/40 font-mono">Agent is thinking...</span>
             </motion.div>
           )}
@@ -450,7 +448,7 @@ export function AgentView() {
         <div className="max-w-4xl mx-auto">
           <GlassCard className="p-2 bg-gradient-to-br from-white/[0.02] to-transparent ring-1 ring-white/10">
             <div className="flex items-start gap-3 w-full bg-black/40 rounded-xl border border-white/10 p-2 shadow-inner">
-              <Bot className="ml-4 mt-3 text-emerald-400/30 shrink-0" size={18} />
+              <Bot className="ml-4 mt-3 text-coral-400/30 shrink-0" size={18} />
               <textarea
                 ref={inputRef}
                 placeholder="Describe a task... e.g. 'Read all .csv files in my Downloads folder and summarize them'"
@@ -490,7 +488,7 @@ export function AgentView() {
                   className={cn(
                     "p-2 rounded-lg transition-all",
                     ttsEnabled
-                      ? "text-emerald-400 bg-emerald-400/10"
+                      ? "text-coral-400 bg-coral-400/10"
                       : "text-white/20 hover:text-white/50 hover:bg-white/5"
                   )}
                   title={ttsEnabled ? "Disable voice output" : "Enable voice output"}
@@ -509,7 +507,7 @@ export function AgentView() {
                 )}
                 <Button
                   size="lg"
-                  className="rounded-lg gap-2 text-sm bg-emerald-600 hover:bg-emerald-500"
+                  className="rounded-lg gap-2 text-sm bg-white text-black hover:bg-white/90 font-semibold"
                   onClick={() => executeAgent(task)}
                   disabled={loading}
                 >

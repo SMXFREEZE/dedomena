@@ -38,18 +38,17 @@ export type MCPCategory =
 export interface MCPCategoryDef {
   id: MCPCategory;
   label: string;
-  emoji: string;
 }
 
 export const MCP_CATEGORIES: MCPCategoryDef[] = [
-  { id: "cloud",         label: "Cloud Platforms",   emoji: "☁️" },
-  { id: "database",      label: "Databases",         emoji: "🗄️" },
-  { id: "devtools",      label: "Code & Dev",        emoji: "🐙" },
-  { id: "files",         label: "Files & Terminal",   emoji: "📁" },
-  { id: "browser",       label: "Browser & Web",      emoji: "🌐" },
-  { id: "communication", label: "Communication",      emoji: "📧" },
-  { id: "analytics",     label: "Analytics",          emoji: "📊" },
-  { id: "gateway",       label: "MCP Gateways",       emoji: "🔌" },
+  { id: "cloud",         label: "Cloud Platforms" },
+  { id: "database",      label: "Databases" },
+  { id: "devtools",      label: "Code & Dev" },
+  { id: "files",         label: "Files & Terminal" },
+  { id: "browser",       label: "Browser & Web" },
+  { id: "communication", label: "Communication" },
+  { id: "analytics",     label: "Analytics" },
+  { id: "gateway",       label: "MCP Gateways" },
 ];
 
 // ── Field shorthand helpers ────────────────────────────────────────────────

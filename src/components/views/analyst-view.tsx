@@ -64,7 +64,7 @@ function NumericSpark({ stat }: { stat: ColumnStat }) {
 }
 
 const typeColor: Record<string, string> = {
-  numeric:     "text-emerald-400 bg-emerald-400/10",
+  numeric:     "text-coral-400 bg-coral-400/10",
   date:        "text-blue-400 bg-blue-400/10",
   categorical: "text-purple-400 bg-purple-400/10",
   boolean:     "text-amber-400 bg-amber-400/10",
@@ -212,7 +212,7 @@ export function AnalystView() {
                             </div>
                             <div className="h-1.5 bg-white/5 rounded overflow-hidden">
                               <div
-                                className={cn("h-full rounded transition-all", stat.fillRate > 0.9 ? "bg-emerald-500" : stat.fillRate > 0.7 ? "bg-amber-400" : "bg-red-500")}
+                                className={cn("h-full rounded transition-all", stat.fillRate > 0.9 ? "bg-coral-500" : stat.fillRate > 0.7 ? "bg-amber-400" : "bg-red-500")}
                                 style={{ width: `${stat.fillRate * 100}%` }}
                               />
                             </div>

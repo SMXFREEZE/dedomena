@@ -203,7 +203,7 @@ export function NotepadPanel({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                                   <X size={12} />
                                 </button>
                                 <button type="button" onClick={handleSaveEdit}
-                                  className="p-1 text-emerald-400/70 hover:text-emerald-400">
+                                  className="p-1 text-coral-400/70 hover:text-coral-400">
                                   <Check size={12} />
                                 </button>
                               </div>

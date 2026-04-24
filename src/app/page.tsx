@@ -1,60 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Moon, Sunrise } from "lucide-react";
+import { VantaBackground } from "@/components/ui/vanta-background";
 
-declare global {
-  interface Window { VANTA: any; THREE: any; }
-}
-
-/* ── helpers ──────────────────────────────────────────────────────────────── */
-function loadScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const s = document.createElement("script");
-    s.src = src; s.onload = () => resolve(); s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-
-const THREE_CDN  = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js";
-const FOG_CDN    = "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js";
-const CLOUDS_CDN = "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js";
-
-/* 6 am – 6 pm = morning, else night */
 function isMorning() {
   const h = new Date().getHours();
   return h >= 6 && h < 18;
 }
 
-/* ── Vanta configs ────────────────────────────────────────────────────────── */
-const FOG_CONFIG = {
-  mouseControls: true, touchControls: true, gyroControls: false,
-  minHeight: 200, minWidth: 200,
-  /* pitch-black base, barely-there indigo highlight — premium midnight */
-  baseColor:      0x020308,
-  lowlightColor:  0x04060f,
-  midtoneColor:   0x080d1c,
-  highlightColor: 0x111830,
-  blurFactor: 0.92,
-  speed:      0.65,
-  zoom:       0.45,
-};
-
-const CLOUDS_CONFIG = {
-  mouseControls: true, touchControls: true, gyroControls: false,
-  minHeight: 200, minWidth: 200,
-  /* pre-dawn sky: deep navy → dark purple clouds, ember sun at horizon */
-  skyColor:         0x04060f,
-  cloudColor:       0x131028,
-  cloudShadowColor: 0x020308,
-  sunColor:         0x3b1200,
-  sunlightColor:    0x150800,
-  sunGlareColor:    0x1e0c00,
-  speed: 0.55,
-};
-
-/* ── static data ──────────────────────────────────────────────────────────── */
 const INTEGRATIONS = [
   "PostgreSQL","MongoDB","MySQL","Redis","Snowflake","Databricks",
   "Salesforce","AWS S3","GitHub","Elasticsearch","Cassandra","MariaDB",
@@ -81,65 +36,21 @@ const FEATURES = [
   },
 ];
 
-/* ── component ────────────────────────────────────────────────────────────── */
 export default function LandingPage() {
-  const vantaRef  = useRef<HTMLDivElement>(null);
-  const vantaFx   = useRef<any>(null);
   const [mode, setMode] = useState<"night" | "morning">("night");
 
-  /* initialise on mount with time-based default */
   useEffect(() => {
     setMode(isMorning() ? "morning" : "night");
   }, []);
-
-  /* re-init whenever mode changes */
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        /* destroy previous effect first */
-        vantaFx.current?.destroy();
-        vantaFx.current = null;
-
-        await loadScript(THREE_CDN);
-
-        if (mode === "night") {
-          await loadScript(FOG_CDN);
-          if (cancelled || !vantaRef.current || !window.VANTA?.FOG) return;
-          vantaFx.current = window.VANTA.FOG({
-            el: vantaRef.current,
-            THREE: window.THREE,
-            ...FOG_CONFIG,
-          });
-        } else {
-          await loadScript(CLOUDS_CDN);
-          if (cancelled || !vantaRef.current || !window.VANTA?.CLOUDS) return;
-          vantaFx.current = window.VANTA.CLOUDS({
-            el: vantaRef.current,
-            THREE: window.THREE,
-            ...CLOUDS_CONFIG,
-          });
-        }
-      } catch (_) {}
-    })();
-
-    return () => { cancelled = true; };
-  }, [mode]);
-
-  /* cleanup on unmount */
-  useEffect(() => () => { vantaFx.current?.destroy(); }, []);
 
   const isNight = mode === "night";
 
   return (
     <>
-      {/* ── Vanta canvas ──────────────────────────────────────────────────── */}
-      <div ref={vantaRef} className="fixed inset-0 z-0" />
+      <VantaBackground mode={mode} />
 
       <div className="relative z-10 flex flex-col min-h-screen text-white">
 
-        {/* ── Nav ───────────────────────────────────────────────────────────── */}
         <nav className="flex items-center justify-between px-8 py-5">
           <div className="flex items-center gap-1.5">
             <span className="text-lg font-semibold tracking-tight">dedomena</span>
@@ -147,14 +58,13 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* day / night toggle */}
             <button
               type="button"
               onClick={() => setMode(m => m === "night" ? "morning" : "night")}
               title={isNight ? "Switch to morning" : "Switch to night"}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/8 text-xs text-white/50 hover:text-white/80 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/50 hover:text-white/80 transition-all"
             >
-              <span>{isNight ? "🌙" : "🌅"}</span>
+              {isNight ? <Moon size={12} /> : <Sunrise size={12} />}
               <span>{isNight ? "Night" : "Morning"}</span>
             </button>
 
@@ -167,10 +77,9 @@ export default function LandingPage() {
           </div>
         </nav>
 
-        {/* ── Hero ──────────────────────────────────────────────────────────── */}
         <section className="flex flex-col items-center justify-center text-center px-6 pt-24 pb-20">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/50 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-coral-400 animate-pulse" />
             Now in public beta
           </div>
 
@@ -200,7 +109,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Stats strip ───────────────────────────────────────────────────── */}
         <div className="border-y border-white/[0.06] bg-black/30 backdrop-blur-md">
           <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-white/[0.06]">
             {STATS.map((s) => (
@@ -212,7 +120,6 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* ── Features ──────────────────────────────────────────────────────── */}
         <section id="features" className="max-w-5xl mx-auto px-6 py-24 w-full">
           <h2 className="heading-lg text-3xl text-center mb-3 text-white/90">
             One interface for all your data
@@ -236,7 +143,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Integrations ──────────────────────────────────────────────────── */}
         <section className="max-w-5xl mx-auto px-6 pb-24 w-full">
           <p className="text-[11px] text-white/25 text-center uppercase tracking-[0.15em] mb-8">
             Works with everything you already use
@@ -256,7 +162,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── CTA ───────────────────────────────────────────────────────────── */}
         <section className="border-t border-white/[0.05] bg-black/30 backdrop-blur-md">
           <div className="max-w-2xl mx-auto text-center px-6 py-20">
             <h2 className="heading-lg text-3xl mb-3">Ready to start?</h2>
@@ -272,7 +177,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Footer ────────────────────────────────────────────────────────── */}
         <footer className="border-t border-white/[0.05] px-8 py-5 flex items-center justify-between text-[11px] text-white/20">
           <span>dedomena<span className="brand-sigma ml-0.5">Σ</span></span>
           <span>© 2026 Dedomena. AI-powered data intelligence.</span>

@@ -117,8 +117,8 @@ export function SettingsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-            <ShieldCheck size={16} className="text-emerald-500 shrink-0" />
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-coral-500/5 border border-coral-500/20">
+            <ShieldCheck size={16} className="text-coral-500 shrink-0" />
             <p className="text-xs text-white/50">
               The AI engine is selected automatically based on your query complexity and dataset size.
               It will <strong className="text-white/70">never answer</strong> without imported data.

@@ -21,7 +21,6 @@ export type CategoryId =
 export interface Category {
   id: CategoryId;
   label: string;
-  emoji: string;
 }
 
 export type ExecutionMode = 'client' | 'server';
@@ -37,7 +36,6 @@ export interface Connector {
   id: string;
   name: string;
   iconSlug?: string;
-  emoji?: string;
   description: string;
   category: CategoryId;
   color: string;

@@ -93,7 +93,7 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
       title="Copy"
       className={cn("p-1.5 rounded-lg text-white/20 hover:text-white/60 hover:bg-white/5 transition-all", className)}
     >
-      {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+      {copied ? <Check size={13} className="text-coral-400" /> : <Copy size={13} />}
     </button>
   );
 }

@@ -224,7 +224,7 @@ function ServiceCard({ def, existing, onConnect, onDisconnect }: {
   return (
     <div className={cn(
       "rounded-2xl border transition-all",
-      isConnected ? "border-emerald-500/20 bg-emerald-500/[0.03]" :
+      isConnected ? "border-coral-500/20 bg-coral-500/[0.03]" :
       hasError ? "border-red-400/20 bg-red-400/[0.03]" :
       "border-white/6 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10"
     )}>
@@ -241,7 +241,7 @@ function ServiceCard({ def, existing, onConnect, onDisconnect }: {
           <div className="flex items-center gap-2">
             <span className="text-[13px] font-semibold text-white/85">{friendlyName}</span>
             {isConnected && (
-              <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full font-medium">
+              <span className="flex items-center gap-1 text-[10px] text-coral-400 bg-coral-400/10 px-2 py-0.5 rounded-full font-medium">
                 <CheckCircle2 size={10} /> Connected
               </span>
             )}
@@ -294,10 +294,10 @@ function ServiceCard({ def, existing, onConnect, onDisconnect }: {
                   </div>
                 </div>
               ) : def.configFields.length === 0 ? (
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
-                  <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-coral-500/5 border border-coral-500/15">
+                  <CheckCircle2 size={16} className="text-coral-400 shrink-0" />
                   <div>
-                    <p className="text-[12px] font-semibold text-emerald-400/90">Ready to go — no setup needed!</p>
+                    <p className="text-[12px] font-semibold text-coral-400/90">Ready to go — no setup needed!</p>
                     <p className="text-[11px] text-white/35 mt-0.5">Just click Connect and start using it immediately.</p>
                   </div>
                 </div>
@@ -466,10 +466,10 @@ export function ConnectView() {
               </p>
             </div>
             {connectedCount > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/15">
-                <Shield size={14} className="text-emerald-400" />
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-coral-500/5 border border-coral-500/15">
+                <Shield size={14} className="text-coral-400" />
                 <div>
-                  <p className="text-sm font-semibold text-emerald-400">{connectedCount}</p>
+                  <p className="text-sm font-semibold text-coral-400">{connectedCount}</p>
                   <p className="text-[9px] text-white/30 uppercase tracking-wider">Connected</p>
                 </div>
               </div>

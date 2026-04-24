@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Folder, Files, Monitor, Check } from "lucide-react";
 import { Connector, ConnectorField, CredentialMap } from "@/lib/connectors/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -368,7 +368,9 @@ function LocalFileForm({ name, setName, onAdd, onAddSilent, onBack }: any) {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
-            <div className="text-3xl">{pickMode === 'folder' ? '📁' : '📂'}</div>
+            <div className="text-white/40">
+              {pickMode === 'folder' ? <Folder size={28} strokeWidth={1.5} /> : <Files size={28} strokeWidth={1.5} />}
+            </div>
             <div>
               {pickMode === 'folder' ? (
                 <>
@@ -487,8 +489,8 @@ function DesktopConnectForm({ onAdd, onAddSilent, onBack }: any) {
           className="w-full border-2 border-dashed border-white/10 hover:border-[#a78bfa]/50 hover:bg-[#a78bfa]/5 rounded-xl p-10 text-center transition-all cursor-pointer group"
         >
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-[#a78bfa]/10 border border-[#a78bfa]/20 flex items-center justify-center text-3xl group-hover:bg-[#a78bfa]/15 transition-colors">
-              🖥️
+            <div className="w-16 h-16 rounded-2xl bg-[#a78bfa]/10 border border-[#a78bfa]/20 flex items-center justify-center text-[#a78bfa] group-hover:bg-[#a78bfa]/15 transition-colors">
+              <Monitor size={28} strokeWidth={1.5} />
             </div>
             <div>
               <p className="text-sm text-white/80 font-semibold">Connect your Desktop</p>
@@ -518,7 +520,9 @@ function DesktopConnectForm({ onAdd, onAddSilent, onBack }: any) {
       {/* Importing */}
       {status === 'importing' && progress && (
         <div className="border border-white/10 rounded-xl p-8 text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-[#a78bfa]/10 flex items-center justify-center text-2xl mx-auto">🖥️</div>
+          <div className="w-12 h-12 rounded-xl bg-[#a78bfa]/10 flex items-center justify-center text-[#a78bfa] mx-auto">
+            <Monitor size={22} strokeWidth={1.5} />
+          </div>
           <div>
             <p className="text-sm text-white/70 font-medium">Importing from "{dirName}"</p>
             <p className="text-xs text-white/40 mt-1">{progress.done} / {progress.total} files</p>
@@ -534,9 +538,9 @@ function DesktopConnectForm({ onAdd, onAddSilent, onBack }: any) {
 
       {/* Done */}
       {status === 'done' && (
-        <div className="border border-emerald-500/20 rounded-xl p-8 text-center space-y-2 bg-emerald-500/5">
-          <p className="text-2xl">✓</p>
-          <p className="text-sm text-emerald-400 font-medium">All files imported</p>
+        <div className="border border-coral-500/20 rounded-xl p-8 text-center space-y-2 bg-coral-500/5">
+          <Check size={28} strokeWidth={2} className="text-coral-400 mx-auto" />
+          <p className="text-sm text-coral-400 font-medium">All files imported</p>
           <p className="text-xs text-white/30">Returning to catalog…</p>
         </div>
       )}

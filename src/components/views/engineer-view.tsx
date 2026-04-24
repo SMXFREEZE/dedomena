@@ -82,7 +82,7 @@ function RuleRow({
 // ── Column quality bar ────────────────────────────────────────────────────────
 
 function ColRow({ name, type, fillRate, nullCount }: { name: string; type: string; fillRate: number; nullCount: number }) {
-  const color = fillRate > 0.9 ? "bg-emerald-500" : fillRate > 0.7 ? "bg-amber-400" : "bg-red-500";
+  const color = fillRate > 0.9 ? "bg-coral-500" : fillRate > 0.7 ? "bg-amber-400" : "bg-red-500";
   return (
     <div className="flex items-center gap-3 py-1.5 border-b border-white/[0.04] last:border-0">
       <span className="text-[11px] font-mono text-white/60 w-32 truncate shrink-0">{name}</span>
@@ -272,8 +272,8 @@ export function EngineerView() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <Pill label="Rows"        value={parsed.totalRows.toLocaleString()} sub={parsed.truncated ? "preview" : "full"} />
                     <Pill label="Columns"     value={parsed.headers.length} sub={parsed.format.toUpperCase()} />
-                    <Pill label="Quality"     value={`${qualityScore}%`} sub="fill rate" accent={qualityScore > 85 ? "text-emerald-400" : qualityScore > 65 ? "text-amber-400" : "text-red-400"} />
-                    <Pill label="Null Cols"   value={nullCols} sub={`${numericCols} numeric`} accent={nullCols > 0 ? "text-amber-400" : "text-emerald-400"} />
+                    <Pill label="Quality"     value={`${qualityScore}%`} sub="fill rate" accent={qualityScore > 85 ? "text-coral-400" : qualityScore > 65 ? "text-amber-400" : "text-red-400"} />
+                    <Pill label="Null Cols"   value={nullCols} sub={`${numericCols} numeric`} accent={nullCols > 0 ? "text-amber-400" : "text-coral-400"} />
                   </div>
 
                   {/* Schema quality list */}
@@ -298,11 +298,11 @@ export function EngineerView() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                       >
-                        <GlassCard className="space-y-4 border border-emerald-500/20">
+                        <GlassCard className="space-y-4 border border-coral-500/20">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <CheckCircle2 size={14} className="text-emerald-400" />
-                              <span className="text-sm font-semibold text-emerald-400">Pipeline complete</span>
+                              <CheckCircle2 size={14} className="text-coral-400" />
+                              <span className="text-sm font-semibold text-coral-400">Pipeline complete</span>
                             </div>
                             <button
                               type="button"
@@ -326,7 +326,7 @@ export function EngineerView() {
                             <ul className="space-y-1.5">
                               {result.changes.map((c, i) => (
                                 <li key={i} className="flex items-center gap-2 text-xs text-white/50">
-                                  <ChevronRight size={10} className="text-emerald-400 shrink-0" />
+                                  <ChevronRight size={10} className="text-coral-400 shrink-0" />
                                   {c}
                                 </li>
                               ))}

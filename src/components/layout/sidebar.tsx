@@ -26,7 +26,7 @@ function timeAgo(iso: string): string {
 function freshnessColor(iso?: string): string {
   if (!iso) return "text-white/20";
   const h = (Date.now() - new Date(iso).getTime()) / 3_600_000;
-  if (h < 1)  return "text-emerald-400";
+  if (h < 1)  return "text-coral-400";
   if (h < 24) return "text-amber-400";
   return "text-red-400/70";
 }
@@ -314,7 +314,7 @@ export function Sidebar({
                         <div className="flex items-center gap-1.5 mt-0.5">
                           {hasError
                             ? <AlertCircle size={9} className="text-red-400 shrink-0" />
-                            : <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", isRefresh ? "bg-amber-400 animate-pulse" : "bg-emerald-500")} />
+                            : <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", isRefresh ? "bg-amber-400 animate-pulse" : "bg-coral-500")} />
                           }
                           <span className={cn("text-[9px] tracking-wider font-mono shrink-0", freshnessColor(src.lastRefreshed ?? src.dateAdded))}>
                             {timeAgo(src.lastRefreshed ?? src.dateAdded)}

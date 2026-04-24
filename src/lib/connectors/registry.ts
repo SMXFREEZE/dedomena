@@ -31,18 +31,18 @@ const microsoft = (scopes: string[]): OAuthConfig => ({
 
 // ── Categories ────────────────────────────────────────────────────────────────
 export const CATEGORIES: Category[] = [
-  { id: 'databases',     label: 'Databases',        emoji: '🗄️' },
-  { id: 'warehouses',    label: 'Data Warehouses',   emoji: '🏭' },
-  { id: 'storage',       label: 'File Storage',      emoji: '📁' },
-  { id: 'crm',           label: 'CRM & Sales',       emoji: '💼' },
-  { id: 'marketing',     label: 'Marketing',         emoji: '📣' },
-  { id: 'productivity',  label: 'Productivity',      emoji: '✅' },
-  { id: 'communication', label: 'Communication',     emoji: '💬' },
-  { id: 'analytics',     label: 'Analytics',         emoji: '📊' },
-  { id: 'devtools',      label: 'Developer Tools',   emoji: '⚙️' },
-  { id: 'finance',       label: 'Finance',           emoji: '💳' },
-  { id: 'ecommerce',     label: 'E-commerce',        emoji: '🛍️' },
-  { id: 'custom',        label: 'Custom',            emoji: '🔌' },
+  { id: 'databases',     label: 'Databases' },
+  { id: 'warehouses',    label: 'Data Warehouses' },
+  { id: 'storage',       label: 'File Storage' },
+  { id: 'crm',           label: 'CRM & Sales' },
+  { id: 'marketing',     label: 'Marketing' },
+  { id: 'productivity',  label: 'Productivity' },
+  { id: 'communication', label: 'Communication' },
+  { id: 'analytics',     label: 'Analytics' },
+  { id: 'devtools',      label: 'Developer Tools' },
+  { id: 'finance',       label: 'Finance' },
+  { id: 'ecommerce',     label: 'E-commerce' },
+  { id: 'custom',        label: 'Custom' },
 ];
 
 // ── Connector registry ────────────────────────────────────────────────────────
