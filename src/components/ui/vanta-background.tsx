@@ -23,12 +23,12 @@ const FOG_CONFIG = {
   mouseControls: true, touchControls: true, gyroControls: false,
   minHeight: 200, minWidth: 200,
   baseColor:      0x020308,
-  lowlightColor:  0x04060f,
-  midtoneColor:   0x080d1c,
-  highlightColor: 0x111830,
-  blurFactor: 0.92,
-  speed:      0.65,
-  zoom:       0.45,
+  lowlightColor:  0x06091e,
+  midtoneColor:   0x111e45,
+  highlightColor: 0x1e3060,
+  blurFactor: 0.78,
+  speed:      0.70,
+  zoom:       0.55,
 };
 
 const CLOUDS_CONFIG = {
