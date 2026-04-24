@@ -49,6 +49,9 @@ export default function LandingPage() {
     <>
       <VantaBackground mode={mode} />
 
+      {/* grain + glow wrapper */}
+      <div className="grain-overlay fixed inset-0 z-[1] pointer-events-none" />
+
       <div className="relative z-10 flex flex-col min-h-screen text-white">
 
         <nav className="flex items-center justify-between px-5 sm:px-8 py-4 sm:py-5">
@@ -77,32 +80,35 @@ export default function LandingPage() {
           </div>
         </nav>
 
-        <section className="flex flex-col items-center justify-center text-center px-5 sm:px-6 pt-14 sm:pt-24 pb-14 sm:pb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/50 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-coral-400 animate-pulse" />
+        <section className="relative flex flex-col items-center justify-center text-center px-5 sm:px-6 pt-14 sm:pt-24 pb-14 sm:pb-20">
+          {/* ambient hero glow */}
+          <div className="hero-glow" />
+
+          <div className="anim-fade-up inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/50 mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-white/40 animate-pulse" />
             Now in public beta
           </div>
 
-          <h1 className="heading-display text-4xl sm:text-6xl md:text-7xl max-w-3xl mb-5 sm:mb-6">
+          <h1 className="anim-fade-up anim-delay-1 heading-display text-4xl sm:text-6xl md:text-7xl max-w-3xl mb-5 sm:mb-6">
             Turn every database<br />
             <span className="text-gradient">into intelligence.</span>
           </h1>
 
-          <p className="text-base sm:text-lg text-white/50 max-w-xl mb-8 sm:mb-10 leading-relaxed">
+          <p className="anim-fade-up anim-delay-2 text-base sm:text-lg text-white/45 max-w-xl mb-8 sm:mb-10 leading-relaxed">
             Ask in plain language. Get answers instantly.<br />
             Dedomena connects to all your data sources — no pipelines required.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+          <div className="anim-fade-up anim-delay-3 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
             <Link
               href="/app"
-              className="w-full sm:w-auto text-center px-6 py-3 rounded-xl bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors shadow-[0_0_40px_rgba(255,255,255,0.08)]"
+              className="w-full sm:w-auto text-center px-6 py-3 rounded-xl bg-white text-black font-semibold text-sm hover:bg-white/90 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.08)] hover:shadow-[0_0_60px_rgba(255,255,255,0.14)]"
             >
               Start for free
             </Link>
             <a
               href="#features"
-              className="w-full sm:w-auto text-center px-6 py-3 rounded-xl border border-white/10 text-sm font-medium text-white/60 hover:text-white hover:border-white/20 transition-colors"
+              className="w-full sm:w-auto text-center px-6 py-3 rounded-xl border border-white/10 text-sm font-medium text-white/50 hover:text-white hover:border-white/25 transition-all duration-300"
             >
               See how it works
             </a>
@@ -111,10 +117,10 @@ export default function LandingPage() {
 
         <div className="border-y border-white/[0.06] bg-black/30 backdrop-blur-md">
           <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-white/[0.06]">
-            {STATS.map((s) => (
-              <div key={s.label} className="flex flex-col items-center py-7 px-4">
-                <span className="text-2xl font-bold tracking-tight">{s.value}</span>
-                <span className="text-xs text-white/35 mt-1 tracking-wide">{s.label}</span>
+            {STATS.map((s, i) => (
+              <div key={s.label} className={`stat-shimmer flex flex-col items-center py-7 px-4 anim-fade-up anim-delay-${i + 1}`}>
+                <span className="text-2xl font-bold tracking-tight tabular-nums">{s.value}</span>
+                <span className="text-[11px] text-white/30 mt-1.5 tracking-[0.08em] uppercase">{s.label}</span>
               </div>
             ))}
           </div>
@@ -128,16 +134,16 @@ export default function LandingPage() {
             Stop context-switching between tools. Query everything from one place.
           </p>
           <div className="grid md:grid-cols-3 gap-5">
-            {FEATURES.map((f) => (
+            {FEATURES.map((f, i) => (
               <div
                 key={f.title}
-                className="glass rounded-2xl p-7 transition-all duration-300 hover:bg-white/[0.04] hover:shadow-[0_0_40px_rgba(255,255,255,0.03)]"
+                className={`glass stat-shimmer rounded-2xl p-7 transition-all duration-500 hover:bg-white/[0.04] hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.07)] anim-fade-up anim-delay-${i + 2}`}
               >
-                <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center mb-5">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-quartz-500 to-coral-500" />
+                <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-5">
+                  <div className="w-2 h-2 rounded-full bg-white/60" />
                 </div>
-                <h3 className="text-[13px] font-semibold mb-2.5 text-white/90">{f.title}</h3>
-                <p className="text-[13px] text-white/40 leading-relaxed">{f.desc}</p>
+                <h3 className="text-[13px] font-semibold mb-2.5 text-white/85 tracking-[-0.01em]">{f.title}</h3>
+                <p className="text-[13px] text-white/35 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>

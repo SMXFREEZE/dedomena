@@ -317,12 +317,6 @@ function ServiceCard({ def, existing, onConnect, onDisconnect }: {
                           <p className="text-[11px] text-white/50 leading-relaxed">{step}</p>
                         </div>
                       ))}
-                      {def.docs && (
-                        <a href={def.docs} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-2 text-[10px] text-blue-400/70 hover:text-blue-400 transition-colors">
-                          <Globe size={10} /> Open setup page <ArrowRight size={8} />
-                        </a>
-                      )}
                     </div>
                   )}
 
