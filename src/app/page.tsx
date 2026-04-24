@@ -54,7 +54,7 @@ export default function LandingPage() {
         <nav className="flex items-center justify-between px-5 sm:px-8 py-4 sm:py-5">
           <div className="flex items-center gap-1.5">
             <span className="text-lg font-semibold tracking-tight">dedomena</span>
-            <span className="brand-sigma text-coral-500 text-lg">Σ</span>
+            <span className="brand-sigma text-quartz-500 text-lg">Σ</span>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
